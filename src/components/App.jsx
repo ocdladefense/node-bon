@@ -27,6 +27,7 @@ window.user = user;
 
 
 
+
 function isLoggedIn() {
 
     let sessionInstanceUrl = getCookie("instanceUrl");

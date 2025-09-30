@@ -3,7 +3,7 @@
 ### Ignore any local overrides.
 # package-overrides.json
 package-main.json
-
+/data
 /package-orig.json
 
 .vs

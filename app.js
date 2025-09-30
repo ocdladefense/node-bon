@@ -9,9 +9,40 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path'); // Import the path module
-const { access } = require('fs');
+const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 80;
+
+
+function iterateDirectorySync(directoryPath) {
+
+    let files = [];
+
+    try {
+        const filesAndFolders = fs.readdirSync(directoryPath);
+
+        filesAndFolders.forEach(item => {
+            const itemPath = path.join(directoryPath, item);
+            const stats = fs.statSync(itemPath);
+
+            if (stats.isFile()) {
+                console.log(`File: ${itemPath}`);
+                files.push(path.basename(itemPath));
+            } else if (stats.isDirectory()) {
+                console.log(`Directory: ${itemPath}`);
+                // Recursively call for subdirectories
+                files = files.concat(iterateDirectorySync(itemPath));
+            }
+        });
+    } catch (err) {
+        console.error(`Error iterating directory: ${err.message}`);
+    }
+
+    return files;
+}
+
+// Example usage:
+
 
 
 const SF_ACCESS_TOKEN = process.env.SF_OAUTH_SESSION_ACCESS_TOKEN_OVERRIDE;
@@ -38,6 +69,36 @@ app.use(express.static('dist'));
 
 
 app.use(cookieParser());
+
+
+
+const metaData = {
+    "2": "Chapter 2 Motions Against the Charging Instrument",
+    "3": "Chapter 3 Release From Custody",
+    "4": "Chapter 4 Notices",
+    "5": "Chapter 5 Dismissal of Charges",
+    "6": "Chapter 6 Psychiatric",
+    "7": "Chapter 7 Pretrial Motions"
+};
+
+
+app.get("/toc", (req, res) => {
+
+    let book = "clfb";
+    let chapters = ["2", "3", "4", "5", "6", "7"];
+    // res.sendFile(path.join(__dirname, 'data', 'toc.json'));
+
+    let files = {};
+
+    chapters.forEach(chapter => {
+        let chapterName = metaData[chapter];
+        let chapterPath = `./data/${book}/${chapter}`;
+        let chapterFiles = iterateDirectorySync(chapterPath);
+        files[chapterName] = chapterFiles;
+    });
+
+    res.json(files);
+});
 
 
 // Todo, turn this into a POST endpoint.

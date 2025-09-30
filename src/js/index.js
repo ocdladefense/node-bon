@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from '../components/App';
 import Home from '../components/Home.jsx';
 import VideoDetails from '../components/VideoDetails.jsx';
-import PlayerContainer from '../components/player/PlayerContainer.jsx';
+import { Book } from '../components/VideoDetails.jsx';
 import PurchasePage from "../components/PurchasePage.jsx";
 
 
@@ -40,10 +40,9 @@ root.render(
         <Routes>
             <Route path="/" element={<App />}>
                 <Route index element={<Home />} />
-                <Route path="media">
-                    <Route path=":resourceId" element={<VideoDetails />} />
-                    <Route path=":resourceId/play" element={<PlayerContainer />} />
-                    <Route path=":resourceId/purchase" element={<PurchasePage />} />
+                <Route path="book">
+                    <Route path=":bookId" element={<Book />} />
+                    <Route path=":bookId/:chapterId" element={<VideoDetails />} />
                 </Route>
             </Route>
         </Routes>
