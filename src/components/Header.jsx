@@ -59,7 +59,7 @@ export default function Header({ loggedIn = false }) {
 
                     <li style={{ verticalAlign: "middle" }} className="inline-block p-3 laptop:px-4">
                         <a href="/">
-                            <img className="h-[50px] laptop:w-[148px] laptop:h-[42px]" style={{ display: "inline-block", verticalAlign: "middle" }} src="/images/logos/logo.png" />
+                            <img className="h-[42px] w-[148px]" style={{ display: "inline-block", verticalAlign: "middle" }} src="/images/logos/logo.png" />
                         </a>
                     </li>
 
