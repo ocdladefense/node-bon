@@ -42,7 +42,7 @@ export default function Header({ loggedIn = false }) {
         items.push(loginItem);
     }
 
-
+    // 
 
     return (
         <header className="w-full mb-0 pb-1 p-[10px] sticky top-0 bg-default-background z-50">

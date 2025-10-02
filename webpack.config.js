@@ -12,7 +12,14 @@ module.exports = env => {
             app: path.resolve(__dirname, "./src/js/index.js")
             // init_head: path.resolve(__dirname, "src/js/custom-elements.js")
         },
+        cache: {
+            type: 'filesystem',
+            buildDependencies: {
+                config: [__filename], // Invalidate cache when webpack.config.js changes
+            },
+        },
         snapshot: {
+            buildDependencies: { timestamp: true, hash: true },
             managedPaths: ["/node_modules"],
             unmanagedPaths: ["/dev_modules"]
         },
@@ -44,7 +51,11 @@ module.exports = env => {
             rules: [
                 {
                     test: /\.(js|jsx)$/,
-                    // exclude: /(node_modules)/,
+                    include: [
+                        path.resolve(__dirname, 'node_modules/@ocdla'),
+                        path.resolve(__dirname, 'src/components'),
+                        path.resolve(__dirname, 'src/js')
+                    ],
                     use: {
                         loader: "babel-loader",
                         options: {
