@@ -75,7 +75,13 @@ async function getVideoParser() {
     let application = new SalesforceRestApi(applicationInstanceUrl, applicationAccessToken);
     user.setApi(session);
 
-    let resp = await application.query(query);
+    let resp;
+
+    if (process.env.SF_OAUTH_SESSION_ACCESS_TOKEN_OVERRIDE) {
+        resp = await session.query(query);
+    } else {
+        resp = await application.query(query);
+    }
     parser.parse(resp.records);
 
     // Default thumb in case there is no available image.
@@ -130,56 +136,6 @@ export default function App() {
     const [appReady, setAppReady] = useState(false);
 
 
-
-    useEffect(() => {
-
-        if (!appReady) return;
-
-        let s1 = new WatchedVideoService(instance_url, access_token);
-        s1.setUserId(user.getUserId());
-        s1.listen();
-
-        let s2 = new PurchasedVideoService(instance_url, access_token);
-        s2.setUserId(user.getUserId());
-        s2.listen();  // can listen for mediapurchase events!
-
-        // Get data from each Service's load() method,
-        // and use it consistent with this application's logic.
-        // Specifically, we add data to the user object for future use.
-
-        // WatchedVideoService
-        s1.load().then((resp) => {
-
-            let records = resp.records;
-
-            if (records == null) {
-                //throw new Error("No records found. Check access token.")
-                console.error("No records found. Check access token.");
-            }
-
-            records.forEach(record => {
-                const resourceId = record.ResourceID__c;
-                const timestamp = record.Timestamp__c;
-
-                user.addWatched({ resourceId, timestamp });
-            });
-        });
-
-        // PurchasedVideoService
-        s2.load().then((resp) => {
-            let records = resp.records;
-
-            records.forEach(record => {
-                const resourceId = record.ResourceID__c;
-                const timestamp = 0;//record.Timestamp__c;
-
-                user.addPurchased({ resourceId, timestamp });
-            });
-        });
-
-        s1.onSave((videoId, timestamp) => { user.addWatched({ resourceId: videoId, timestamp }) });
-        s2.onSave((videoId, timestamp) => { user.addPurchased({ resourceId: videoId, timestamp }) });
-    }, [appReady]);
 
 
     useEffect(() => {

@@ -97,11 +97,11 @@ export default function VideoDetails() {
 
     return (
 
-        <div className="video-details bg-zinc-900 min-h-screen">
+        <div className="video-details min-h-screen">
 
             {content ?
                 <div className="video-content relative w-full">
-                    <div style={{ color: "#c5baba" }} dangerouslySetInnerHTML={{ __html: content }} />
+                    <div dangerouslySetInnerHTML={{ __html: content }} />
                 </div>
                 : ""}
 

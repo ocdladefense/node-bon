@@ -45,7 +45,7 @@ module.exports = {
                 "plush": "rgb(43,61,69)",
                 "bonfire": "rgb(40,48,33)",
                 "sunshine": "rgb(247,224,170)",
-                "default-background": "rgb(247,224,170)",
+                "default-background": "rgba(239, 235, 235, 1)",
                 "sunshine-dark": "rgb(158,50,48)"
             }
         }

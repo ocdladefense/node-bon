@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { MenuTop, MenuMobile } from "./navigation/Menus";
+
+import MenuTop from "./navigation/MenuTop";
+import MenuMobile from "./navigation/MenuMobile";
 import Hamburger from "./navigation/Hamburger";
-import { getCookie } from '@ocdla/salesforce/CookieUtils';
 
 
 export default function Header({ loggedIn = false }) {
@@ -13,13 +13,6 @@ export default function Header({ loggedIn = false }) {
             url: "/",
             label: "home"
         },
-        // {
-        //     url: "/login",
-        //     label: "login",
-        //     hidden: true,
-        //     loggedIn: loggedIn
-
-        // },
         {
             url: "/settings",
             label: "settings",
@@ -52,14 +45,14 @@ export default function Header({ loggedIn = false }) {
 
 
     return (
-        <header className="w-full mb-0 pb-1 p-[10px] sticky top-0 bg-wb-black z-50">
+        <header className="w-full mb-0 pb-1 p-[10px] sticky top-0 bg-default-background z-50">
             <nav className="tablet:px-8">
 
                 <ul className="text-zinc-100 inline-block" style={{ width: "100%" }}>
 
                     <li style={{ verticalAlign: "middle" }} className="inline-block p-3 laptop:px-4">
                         <a href="/">
-                            <img className="h-[42px] w-[148px]" style={{ display: "inline-block", verticalAlign: "middle" }} src="/images/logos/logo.png" />
+                            <img className="w-[100px]" style={{ display: "inline-block", verticalAlign: "middle" }} src="/images/logos/logo.png" />
                         </a>
                     </li>
 
