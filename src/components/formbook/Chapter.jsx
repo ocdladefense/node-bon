@@ -53,8 +53,8 @@ function Documents({ chapterNumber, title, docs }) {
         <div className="documents mb-8">
             <ul>
                 {docs.map((doc, index) => (
-                    <li key={index}>
-                        <a href="#" onClick={() => navigate(`/form/${chapterNumber}/${doc}`)} chapterNumberclassName="mb-2">{doc}</a>
+                    <li className="p-1" key={index}>
+                        <a className="cursor-pointer" onClick={() => navigate(`/form/${chapterNumber}/${doc}`)} chapterNumberclassName="mb-2">{doc}</a>
                     </li>
                 ))}
             </ul>
