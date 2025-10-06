@@ -45,14 +45,14 @@ export default function Header({ loggedIn = false }) {
     // 
 
     return (
-        <header className="w-full mb-0 pb-1 p-[10px] sticky top-0 bg-default-background z-50">
-            <nav className="tablet:px-8">
+        <header className="w-full mb-0 py-1 sticky top-0 bg-default-background z-50">
+            <nav>
 
                 <ul className="text-zinc-100 inline-block" style={{ width: "100%" }}>
 
-                    <li style={{ verticalAlign: "middle" }} className="inline-block p-3 laptop:px-4">
+                    <li style={{ verticalAlign: "middle" }} className="inline-block">
                         <a href="/">
-                            <img className="w-[100px]" style={{ display: "inline-block", verticalAlign: "middle" }} src="/images/logos/logo.png" />
+                            <img className="phone:w-[150px] desktop:w-[200px]" style={{ display: "inline-block", verticalAlign: "middle" }} src="/images/logos/logo.png" />
                         </a>
                     </li>
 

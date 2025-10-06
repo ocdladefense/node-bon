@@ -152,7 +152,7 @@ export default function App() {
     return (
         <>
             <Header loggedIn={isLoggedIn()} />
-            <div className="mx-auto">
+            <div className="mx-auto pt-4">
                 {!parser.isInitialized() ? <h1>My splash screen</h1> : <Outlet context={{ parser, user }} />}
             </div>
             <Footer />

@@ -82,22 +82,24 @@ const metaData = {
 };
 
 
-app.get("/toc", (req, res) => {
+app.get("/toc/:chapterNumber", (req, res) => {
 
     let book = "clfb";
     let chapters = ["2", "3", "4", "5", "6", "7"];
     // res.sendFile(path.join(__dirname, 'data', 'toc.json'));
 
-    let files = {};
+    let meta = {};
+    let chapter = req.params.chapterNumber;
 
-    chapters.forEach(chapter => {
-        let chapterName = metaData[chapter];
-        let chapterPath = `./data/${book}/${chapter}`;
-        let chapterFiles = iterateDirectorySync(chapterPath);
-        files[chapterName] = chapterFiles;
-    });
+    // chapters.forEach(chapter => {
+    let chapterName = metaData[chapter];
+    let chapterPath = `./data/${book}/${chapter}`;
+    let chapterFiles = iterateDirectorySync(chapterPath);
+    meta.name = chapterName;
+    meta.files = chapterFiles;
+    //});
 
-    res.json(files);
+    res.json(meta);
 });
 
 

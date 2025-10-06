@@ -113,6 +113,10 @@ module.exports = env => {
                         from: path.resolve(__dirname, "src/images"),
                         to: path.resolve(__dirname, "dist/images")
                     },
+                    {
+                        from: path.resolve(__dirname, "data"),
+                        to: path.resolve(__dirname, "dist/data")
+                    },
                     "src/.nojekyll",
                     "src/manifest.json",
                     "src/sw.js",

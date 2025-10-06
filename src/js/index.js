@@ -7,7 +7,9 @@ import App from '../components/App';
 import Home from '../components/Home.jsx';
 import VideoDetails from '../components/VideoDetails.jsx';
 import { Book } from '../components/VideoDetails.jsx';
-import PurchasePage from "../components/PurchasePage.jsx";
+import Chapter from '../components/formbook/Chapter.jsx';
+import Form from '../components/formbook/Form.jsx';
+// import PurchasePage from "../components/PurchasePage.jsx";
 
 
 if (process.env.NODE_ENV === 'debug') {
@@ -40,6 +42,10 @@ root.render(
         <Routes>
             <Route path="/" element={<App />}>
                 <Route index element={<Home />} />
+                <Route path="form">
+                    <Route path=":chapterId" element={<Chapter />} />
+                    <Route path=":chapterId/:formId" element={<Form />} />
+                </Route>
                 <Route path="book">
                     <Route path=":bookId" element={<Book />} />
                     <Route path=":bookId/:chapterId" element={<VideoDetails />} />
