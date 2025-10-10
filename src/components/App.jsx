@@ -6,11 +6,9 @@ import User from '../js/models/User.js';
 import Video from '../js/models/Video.js';
 import SalesforceRestApi from '@ocdla/salesforce/SalesforceRestApi.js';
 import { getCookie } from '@ocdla/salesforce/CookieUtils.js';
-import WatchedVideoService from '../js/services/WatchedVideoService.js'
-import PurchasedVideoService from '../js/services/PurchasedVideoService.js'
 import VideoDataParser from "../js/controllers/VideoDataParser.js";
 import Cache from '../js/controllers/Cache.js';
-import { YouTubeData, getThumbs, getDurations } from '../js/controllers/YouTubeData.js';
+// import { YouTubeData, getThumbs, getDurations } from '../js/controllers/YouTubeData.js';
 
 
 
@@ -95,34 +93,6 @@ async function getVideoParser() {
     const resourceIds = Video.getResourceIds(videos);
     const uncached = resourceIds;//Cache.getUncached(, cache1, cache2);
 
-    let foo = await YouTubeData.load(uncached);
-
-    let thumbs = getThumbs();
-    let durations = getDurations();
-
-    thumbs.forEach(item => {
-        cache1.set(item.id, item);
-    });
-
-    durations.forEach(item => {
-        cache2.set(item.id, item);
-    });
-
-
-
-    videos.forEach(video => {
-        const thumbs = cache1.get(video.resourceId);
-        const durations = cache2.get(video.resourceId);
-
-        if (thumbs) {
-            video.setThumbnail(thumbs.thumbs);
-        }
-
-        if (durations) {
-            video.setDuration(durations.durations);
-        }
-
-    });
 
 
     return parser;
