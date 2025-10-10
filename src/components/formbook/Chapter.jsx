@@ -5,12 +5,9 @@ import { useParams, useNavigate } from "react-router";
 
 
 
-export default function Chapter({ chapterId, setActiveForm }) {
+export default function Chapter({ chapterNumber }) {
 
     let [chapter, setChapter] = useState(null);
-    let params = useParams();
-    let chapterNumber = chapterId || params.chapterId;
-
 
 
     useEffect(() => {
@@ -29,14 +26,13 @@ export default function Chapter({ chapterId, setActiveForm }) {
 
 
     return (
-        <div className="video-details min-h-screen">
-            <h1>Criminal Law Formbook</h1>
-            <h3>2021 Edition</h3>
+        <div className="video-details">
+
 
             {chapter ?
                 <div>
-                    <h2 className="text-2xl font-bold mb-4">{chapter.name}</h2>
-                    <Documents setActiveForm={setActiveForm} chapterNumber={chapterNumber} title={chapter.name} docs={chapter.files} />
+                    <h2 className="text-large font-bold mb-4">{chapter.name}</h2>
+                    <Documents chapterNumber={chapterNumber} docs={chapter.files} />
                 </div>
                 : ""}
         </div>
@@ -45,16 +41,16 @@ export default function Chapter({ chapterId, setActiveForm }) {
 };
 
 
-function Documents({ docs, setActiveForm }) {
+function Documents({ docs, chapterNumber }) {
 
-    // let navigate = useNavigate();
+    let navigate = useNavigate();
 
     return (
         <div className="documents mb-8">
             <ul>
                 {docs.map((doc, index) => (
                     <li className="p-1" key={index}>
-                        <a className="cursor-pointer" onClick={() => setActiveForm(doc)} chapterNumberclassName="mb-2">{doc}</a>
+                        <a className="mb-2 cursor-pointer" onClick={() => navigate(`/formbook/${chapterNumber}/${doc}`)}>{doc}</a>
                     </li>
                 ))}
             </ul>

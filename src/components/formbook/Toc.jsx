@@ -26,9 +26,9 @@ const chapters = {
 
 
 
-export default function Toc({ setActiveForm }) {
+export default function Toc() {
 
-    let navigate = useNavigate();
+    // let navigate = useNavigate();
     let numbers = Object.keys(chapters);
     let titles = Object.values(chapters);
 
@@ -44,8 +44,7 @@ export default function Toc({ setActiveForm }) {
                 <ul>
                     {numbers.map((number, index) => (
                         <li className="p-1" key={index}>
-                            <a className="cursor-pointer mb-2">{titles[index]}</a>
-                            <Chapter chapterId={number} setActiveForm={setActiveForm} />
+                            <Chapter chapterNumber={number} />
                         </li>
                     ))}
                 </ul>

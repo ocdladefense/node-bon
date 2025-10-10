@@ -16,19 +16,15 @@ async function getForm(chapterId, formId) {
 
 
 
-export default function Form({ formId = null }) {
+export default function Form({ chapterNumber, formId }) {
 
-    let params = useParams();
-    let parsedChapter = formId.split('-')[0][0];
-    formId = formId || params.formId;
-    let chapterNumber = parsedChapter || params.chapterId;
+
     let viewerRef = useRef(null);
     let [chapter, setChapter] = useState({});
 
-    // Use react-router-dom hook.
-    let { parser, user } = useOutletContext();
 
-    let navigate = useNavigate();
+
+
 
 
 
