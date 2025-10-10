@@ -78,7 +78,19 @@ const metaData = {
     "4": "Chapter 4 Notices",
     "5": "Chapter 5 Dismissal of Charges",
     "6": "Chapter 6 Psychiatric",
-    "7": "Chapter 7 Pretrial Motions"
+    "7": "Chapter 7 Pretrial Motions",
+    "8": "Chapter 8 Discovery",
+    "9": "Witnesses",
+    "10": "Consolidation/Severance",
+    "11": "Continuance",
+    "12": "Change of Venue",
+    "13": "Motion to Disqualify Judge",
+    "14": "Withdrawal of Attorney",
+    "15": "Jury Instructions",
+    "16": "Special Problems",
+    "17": "Chapter 17 Sentencing, Dispositional, and Post-Trial Matters",
+    "18": "Appeals",
+    "19": "Habeus Corpus"
 };
 
 

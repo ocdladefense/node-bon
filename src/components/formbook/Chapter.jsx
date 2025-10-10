@@ -5,11 +5,11 @@ import { useParams, useNavigate } from "react-router";
 
 
 
-export default function Chapter() {
+export default function Chapter({ chapterId, setActiveForm }) {
 
     let [chapter, setChapter] = useState(null);
     let params = useParams();
-    let chapterNumber = params.chapterId;
+    let chapterNumber = chapterId || params.chapterId;
 
 
 
@@ -36,7 +36,7 @@ export default function Chapter() {
             {chapter ?
                 <div>
                     <h2 className="text-2xl font-bold mb-4">{chapter.name}</h2>
-                    <Documents chapterNumber={chapterNumber} title={chapter.name} docs={chapter.files} />
+                    <Documents setActiveForm={setActiveForm} chapterNumber={chapterNumber} title={chapter.name} docs={chapter.files} />
                 </div>
                 : ""}
         </div>
@@ -45,16 +45,16 @@ export default function Chapter() {
 };
 
 
-function Documents({ chapterNumber, title, docs }) {
+function Documents({ docs, setActiveForm }) {
 
-    let navigate = useNavigate();
+    // let navigate = useNavigate();
 
     return (
         <div className="documents mb-8">
             <ul>
                 {docs.map((doc, index) => (
                     <li className="p-1" key={index}>
-                        <a className="cursor-pointer" onClick={() => navigate(`/form/${chapterNumber}/${doc}`)} chapterNumberclassName="mb-2">{doc}</a>
+                        <a className="cursor-pointer" onClick={() => setActiveForm(doc)} chapterNumberclassName="mb-2">{doc}</a>
                     </li>
                 ))}
             </ul>

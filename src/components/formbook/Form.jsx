@@ -16,11 +16,12 @@ async function getForm(chapterId, formId) {
 
 
 
-export default function Form() {
+export default function Form({ formId = null }) {
 
     let params = useParams();
-    let formId = params.formId;
-    let chapterNumber = params.chapterId;
+    let parsedChapter = formId.split('-')[0][0];
+    formId = formId || params.formId;
+    let chapterNumber = parsedChapter || params.chapterId;
     let viewerRef = useRef(null);
     let [chapter, setChapter] = useState({});
 
@@ -40,7 +41,7 @@ export default function Form() {
             renderAsync(resp2, viewerRef.current, null, { inWrapper: true, ignoreWidth: true });
         }
         fn();
-    }, []);
+    }, [formId]);
 
 
 

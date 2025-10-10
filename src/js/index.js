@@ -7,6 +7,7 @@ import App from '../components/App';
 import Home from '../components/Home.jsx';
 import VideoDetails from '../components/VideoDetails.jsx';
 import { Book } from '../components/VideoDetails.jsx';
+import Layout from '../components/formbook/Layout.jsx';
 import Chapter from '../components/formbook/Chapter.jsx';
 import Form from '../components/formbook/Form.jsx';
 // import PurchasePage from "../components/PurchasePage.jsx";
@@ -43,6 +44,7 @@ root.render(
             <Route path="/" element={<App />}>
                 <Route index element={<Home />} />
                 <Route path="form">
+                    <Route index element={<Layout />} />
                     <Route path=":chapterId" element={<Chapter />} />
                     <Route path=":chapterId/:formId" element={<Form />} />
                 </Route>
