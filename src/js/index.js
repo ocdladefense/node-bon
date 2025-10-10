@@ -44,7 +44,7 @@ root.render(
                 <Route index element={<Home />} />
                 <Route path="formbook">
                     <Route index element={<BookCover />} />
-                    <Route path=":chapterId/:formId" element={<Layout />} />
+                    <Route path=":chapterId/:formId?" element={<Layout />} />
                 </Route>
                 <Route path="book">
                     <Route path=":bookId" element={<Book />} />

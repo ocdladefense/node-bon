@@ -17,7 +17,7 @@ export default function Layout() {
     return (
         <div class="grid grid-cols-6 gap-4 bg-white">
             <div class="col-span-2 p-4 border-r border-solid border-gray-400"><Toc activeChapter={chapterNumber} activeForm={formId} /></div>
-            <div class="col-span-4 p-4"><Form chapterNumber={chapterNumber} formId={formId} /></div>
+            <div class="col-span-4 p-4">{!formId ? "" : <Form chapterNumber={chapterNumber} formId={formId} />}</div>
         </div>
     );
 };
