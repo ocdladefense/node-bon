@@ -4,12 +4,10 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from '../components/App';
-import Home from '../components/Home.jsx';
-import VideoDetails from '../components/VideoDetails.jsx';
-import { Book } from '../components/VideoDetails.jsx';
 import BookCover from '../components/formbook/BookCover.jsx';
 import Layout from '../components/formbook/Layout.jsx';
-// import PurchasePage from "../components/PurchasePage.jsx";
+import BonLayout from '../components/Layout.jsx';
+
 
 
 if (process.env.NODE_ENV === 'debug') {
@@ -41,14 +39,12 @@ root.render(
         <ScrollToTop />
         <Routes>
             <Route path="/" element={<App />}>
-                <Route index element={<Home />} />
                 <Route path="formbook">
                     <Route index element={<BookCover />} />
                     <Route path=":chapterId/:formId?" element={<Layout />} />
                 </Route>
                 <Route path="book">
-                    <Route path=":bookId" element={<Book />} />
-                    <Route path=":bookId/:chapterId" element={<VideoDetails />} />
+                    <Route path=":bookId/:chapterId" element={<BonLayout />} />
                 </Route>
             </Route>
         </Routes>

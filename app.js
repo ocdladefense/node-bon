@@ -48,22 +48,6 @@ function iterateDirectorySync(directoryPath) {
 const SF_ACCESS_TOKEN = process.env.SF_OAUTH_SESSION_ACCESS_TOKEN_OVERRIDE;
 
 
-
-/*
-from webpack.json
-
-new webpack.DefinePlugin({
-                USE_MOCK: JSON.stringify(env.USE_MOCK || false),// Can we even pass booleans from the CLI?
-                MODULE_PATH: JSON.stringify(env.MODULE_PATH || ""),
-                API_KEY: JSON.stringify(env.API_KEY),
-                SF_ACCESS_TOKEN: JSON.stringify(env.SF_ACCESS_TOKEN),
-                SF_INSTANCE_URL: JSON.stringify(env.SF_INSTANCE_URL),
-                SF_ACCESS_TOKEN: JSON.stringify(env.SF_ACCESS_TOKEN),
-                SF_USER_ID: JSON.stringify(env.SF_USER_ID)
-            }),
-*/
-
-
 // Serve static files from the 'dist' directory
 app.use(express.static('dist'));
 
@@ -94,24 +78,54 @@ const metaData = {
     "19": "Chapter 19 Habeus Corpus"
 };
 
+const tnb = {
+    "1": "Uniform Trial Court Rules",
+    "2": "Discovery",
+    "3": "Defenses",
+    "4": "Exhibits and Creative Technology",
+    "5": "Admissibility of Electronic Evidence",
+    "6": "Demurrers",
+    "7": "As-Applied Challenges",
+    "8": "Motions in Limine",
+    "0": "Jury Selection",
+    "10": "Opening Statements",
+    "11": "Cross Examination",
+    "12": "Making a Record and Offers of Proof",
+    "13": "Mistrial",
+    "14": "Motion for Judgement of Acquittal",
+    "15": "",
+    "16": "Defense Witnesses",
+    "17": "Expert Witnesses",
+    "18": "Closing Argument",
+    "19": "Jury Instructions",
+    "20": "Motions for a New Trial and Arrest of Judgment"
+};
 
 
-app.get("/toc/:chapterNumber", (req, res) => {
+app.get("/toc/tnb", (req, res) => {
 
-    let book = "clfb";
-    let chapters = ["2", "3", "4", "5", "6", "7"];
-    // res.sendFile(path.join(__dirname, 'data', 'toc.json'));
+    let meta = [];
+
+    Object.keys(tnb).forEach((chapter, index) => {
+        let chapterName = tnb[chapter];
+        meta.push(chapterName);
+    });
+    res.json(meta);
+});
+
+
+app.get("/toc/clfb", (req, res) => {
 
     let meta = {};
     let chapter = req.params.chapterNumber;
 
-    // chapters.forEach(chapter => {
+
     let chapterName = metaData[chapter];
     let chapterPath = `./data/${book}/${chapter}`;
     let chapterFiles = iterateDirectorySync(chapterPath);
     meta.name = chapterName;
     meta.files = chapterFiles;
-    //});
+
 
     res.json(meta);
 });
