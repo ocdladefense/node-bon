@@ -12,7 +12,7 @@ export default function Chapter({ chapterNumber }) {
 
     useEffect(() => {
         async function fn() {
-            let resp = await fetch("/toc/" + chapterNumber).then(resp => resp.json());
+            let resp = await fetch("/toc/clfb/" + chapterNumber).then(resp => resp.json());
             setChapter(resp);
         }
         fn();

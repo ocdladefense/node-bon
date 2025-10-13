@@ -24,13 +24,9 @@ export default function Form({ chapterNumber, formId }) {
 
 
 
-
-
-
-
     useEffect(() => {
         async function fn() {
-            let resp1 = await fetch("/toc/" + chapterNumber).then(resp => resp.json());
+            let resp1 = await fetch("/toc/clfb/" + chapterNumber).then(resp => resp.json());
             setChapter(resp1);
             let resp2 = await getForm(chapterNumber, formId);
             // setContent(resp);

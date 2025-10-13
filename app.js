@@ -114,14 +114,14 @@ app.get("/toc/tnb", (req, res) => {
 });
 
 
-app.get("/toc/clfb", (req, res) => {
+app.get("/toc/clfb/:chapterNumber", (req, res) => {
 
     let meta = {};
     let chapter = req.params.chapterNumber;
 
 
     let chapterName = metaData[chapter];
-    let chapterPath = `./data/${book}/${chapter}`;
+    let chapterPath = `./data/clfb/${chapter}`;
     let chapterFiles = iterateDirectorySync(chapterPath);
     meta.name = chapterName;
     meta.files = chapterFiles;
