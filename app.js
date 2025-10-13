@@ -87,7 +87,7 @@ const tnb = {
     "6": "Demurrers",
     "7": "As-Applied Challenges",
     "8": "Motions in Limine",
-    "0": "Jury Selection",
+    "9": "Jury Selection",
     "10": "Opening Statements",
     "11": "Cross Examination",
     "12": "Making a Record and Offers of Proof",

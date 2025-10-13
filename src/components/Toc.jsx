@@ -41,11 +41,11 @@ export default function Toc() {
 
     return (
 
-        <div className="max-h-screen video-details overflow-y-auto">
 
+        <div className="overflow-y-scroll max-h-screen">
             {theList}
-
         </div>
+
 
     );
 };
