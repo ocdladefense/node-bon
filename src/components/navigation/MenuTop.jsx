@@ -11,7 +11,7 @@ export default function MenuTop({ items }) {
             <li className={`hidden ${phoneDisplay} p-2 laptop:p-6`}>
                 {/*<NavLink to={item.url}>{item.label}</NavLink> */}
                 <a href={item.url}>
-                    <button className={`font-marketing text-white subpixel-antialiased hover:text-wb-cordovan`}>{item.label}</button>
+                    <button className={`font-marketing subpixel-antialiased hover:text-wb-cordovan`}>{item.label}</button>
                 </a>
             </li>
         );

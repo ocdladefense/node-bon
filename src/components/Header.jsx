@@ -48,7 +48,7 @@ export default function Header({ loggedIn = false }) {
         <header className="w-full mb-0 py-1 sticky top-0 bg-default-background z-50">
             <nav>
 
-                <ul className="text-zinc-100 inline-block" style={{ width: "100%" }}>
+                <ul className="inline-block" style={{ width: "100%" }}>
 
                     <li style={{ verticalAlign: "middle" }} className="inline-block">
                         <a href="/">

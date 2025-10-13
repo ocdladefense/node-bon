@@ -9,7 +9,7 @@ export default function BookCovers() {
 
     let navigate = useNavigate();
 
-    return <div className="grid grid-cols-12 gap-4 bg-white">
+    return <div className="grid grid-cols-12 gap-4 bg-white min-h-screen">
         <div className="col-span-4 phone:col-span-6">
             <a className="cursor-pointer" onClick={() => navigate("/formbook/1")}>
                 <img src="/images/covers/clfb-cover.png" />
