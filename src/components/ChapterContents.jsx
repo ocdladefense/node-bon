@@ -20,17 +20,17 @@ export default function ChapterContents() {
     let [content, setContent] = useState(null);
     let params = useParams();
     let bookName = params.bookId;
-    let chapterNumber = params.chapterId;
+    let chapterId = params.chapterId;
 
 
 
     useEffect(() => {
         async function fn() {
-            let resp = await getBonChapter(bookName, chapterNumber);
+            let resp = await getBonChapter(bookName, chapterId);
             setContent(resp);
         }
         fn();
-    }, []);
+    }, [chapterId]);
 
 
 

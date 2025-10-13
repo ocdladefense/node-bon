@@ -104,13 +104,8 @@ const tnb = {
 
 app.get("/toc/tnb", (req, res) => {
 
-    let meta = [];
 
-    Object.keys(tnb).forEach((chapter, index) => {
-        let chapterName = tnb[chapter];
-        meta.push(chapterName);
-    });
-    res.json(meta);
+    res.json(tnb);
 });
 
 

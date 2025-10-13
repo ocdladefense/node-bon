@@ -28,11 +28,11 @@ export default function Toc() {
 
 
 
-    theList = content.map((item, index) => {
+    theList = Object.values(content).map((item, index) => {
         return (
             <ul>
                 <li key={index} className="mb-2">
-                    <a onClick={() => navigate(`/book/${bookId}/${chapterId}`)}>{item}</a>
+                    <a onClick={() => navigate(`/book/${bookId}/` + ++index)}>{item}</a>
                 </li>
             </ul>
         )
@@ -41,7 +41,7 @@ export default function Toc() {
 
     return (
 
-        <div className="min-h-screen">
+        <div className="max-h-screen video-details overflow-y-auto">
 
             {theList}
 
