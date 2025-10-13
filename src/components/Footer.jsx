@@ -35,7 +35,7 @@ export default function Footer() {
                                 <li>
 
                                     <ul id="ul-depth-3" class="text-[0.625rem] font-thin leading-[0.75rem] text-neutral-500">
-                                        <li>©2024 Oregon Criminal Defense Lawyers Association</li>
+                                        <li>©2025 Oregon Criminal Defense Lawyers Association</li>
                                         <li class="size-full text-wrap">Oregon Criminal Defense Lawyers Association is a 501(c)(3) nonprofit educational association. Contributions to OCDLA may be tax deductible - check with your tax advisor. Electronic downloads are for the sole use of the purchasing member. Files may not be distributed to others.</li>
                                     </ul>
                                 </li>

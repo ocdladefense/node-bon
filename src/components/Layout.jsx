@@ -9,9 +9,9 @@ export default function Layout() {
 
 
     return (
-        <div class="grid grid-cols-6 gap-4 bg-white">
-            <div class="col-span-2 p-4 border-r border-solid border-gray-400 sticky top-0"><Toc /></div>
-            <div class="col-span-4 p-4"><ChapterContents /></div>
+        <div className="grid grid-cols-6 gap-4 bg-white">
+            <div className="col-span-2 p-4 border-r border-solid border-gray-400 sticky top-0"><Toc /></div>
+            <div className="col-span-4 p-4"><ChapterContents /></div>
         </div>
     );
 };

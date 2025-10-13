@@ -4,10 +4,9 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from '../components/App';
-import BookCover from '../components/formbook/BookCover.jsx';
-import Layout from '../components/formbook/Layout.jsx';
+import BookCovers from '../components/BookCovers.jsx';
 import BonLayout from '../components/Layout.jsx';
-
+import Layout from '../components/formbook/Layout.jsx';
 
 
 if (process.env.NODE_ENV === 'debug') {
@@ -39,8 +38,8 @@ root.render(
         <ScrollToTop />
         <Routes>
             <Route path="/" element={<App />}>
+                <Route index element={<BookCovers />} />
                 <Route path="formbook">
-                    <Route index element={<BookCover />} />
                     <Route path=":chapterId/:formId?" element={<Layout />} />
                 </Route>
                 <Route path="book">
