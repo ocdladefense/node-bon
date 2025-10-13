@@ -32,7 +32,7 @@ export default function Toc() {
         return (
             <ul>
                 <li key={index} className="mb-2">
-                    <a onClick={() => navigate(`/book/${bookId}/` + ++index)}>{item}</a>
+                    <a className="cursor-pointer" onClick={() => navigate(`/book/${bookId}/` + ++index)}>{item}</a>
                 </li>
             </ul>
         )
