@@ -93,7 +93,7 @@ const tnb = {
     "12": "Making a Record and Offers of Proof",
     "13": "Mistrial",
     "14": "Motion for Judgement of Acquittal",
-    "15": "",
+    "15": "Daredevil Direct",
     "16": "Defense Witnesses",
     "17": "Expert Witnesses",
     "18": "Closing Argument",
@@ -106,6 +106,28 @@ app.get("/toc/tnb", (req, res) => {
 
 
     res.json(tnb);
+});
+
+
+
+app.get("/kml/house/:district", (req, res) => {
+
+    // Load the XML in a parser.
+    const text = fs.readFileSync(`./data/geo/house-district-${req.params.district}.txt`, 'utf8').trim();
+
+    // parse "lng,lat" pairs separated by whitespace into [{lat, lng}, ...]
+    let coords = text.split(/\s+/).map(pair => {
+        const [lngStr, latStr] = pair.split(',');
+        let lng = parseFloat(lngStr);
+        const lat = parseFloat(latStr);
+        if (Number.isNaN(lng) || Number.isNaN(lat)) throw new Error('Invalid pair: ' + pair);
+        // Heuristic: if longitude looks like a positive 3-digit value (e.g. 123) but latitude is valid,
+        // it's likely a missing negative sign for west longitudes — flip it.
+        if (lng > 90 && lat >= -90 && lat <= 90) lng = -lng;
+        return { lat, lng };
+    });
+
+    return res.json(coords);
 });
 
 
