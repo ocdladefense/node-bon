@@ -10,7 +10,7 @@ export default function Modal({ isOpen, onClose, confirmAction, content }) {
 
     return ReactDOM.createPortal(
         <div style={{ zIndex: 100, top: "0px", left: "0px", textAlign: "center", height: "100vh", width: "100vw" }} onClick={onClose} className="fixed p-8 bg-black bg-opacity-70">
-            <div style={{ width: "90vw", height: "90%", margin: "0 auto", overflowY: "scroll", overflowX: "hidden" }} className="bg-white rounded-xl p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div style={{ height: "90%", margin: "0 auto", overflowY: "scroll", overflowX: "hidden" }} className="bg-white rounded-xl p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
                 {content}
                 <button onClick={onClose}>Close</button>
                 <div>

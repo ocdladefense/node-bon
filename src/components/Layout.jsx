@@ -22,8 +22,8 @@ export default function Layout() {
     return (
         <div className="grid grid-cols-6 gap-4 bg-white">
             <Modal isOpen={isOpen} content={modalContent} onClose={closeModal} />
-            <div className="col-span-2 p-4 border-r border-solid border-gray-400 sticky top-0"><Toc /></div>
-            <div className="col-span-4 p-4">
+            <div className="phone:hidden col-span-2 p-4 border-r border-solid border-gray-400 sticky top-0"><Toc /></div>
+            <div className="col-span-4 phone:col-span-6 p-4">
                 <button onClick={handleOpenCustomModal}>Open Custom Modal</button>
                 <ChapterContents />
             </div>

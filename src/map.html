@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>OCDLA Geo Data | Development</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=overlays-content" />
+    <!-- <link rel="manifest" href="manifest.json" /> -->
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="googlebot" content="noindex, nofollow" />
+    <meta name="googlebot-news" content="noindex, nofollow" />
+    <meta name="slurp" content="noindex, nofollow" />
+    <meta name="msnbot" content="noindex, nofollow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@100;200;300;400;500&family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet" />
+
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <script>
+        function domReady(cb) {
+            document.readyState === 'interactive' || document.readyState === 'complete'
+                ? cb()
+                : document.addEventListener('DOMContentLoaded', cb);
+        }
+    </script>
+</head>
+
+<body id="root" class="text-sm invisible bg-default-background">
+    <script>0</script>
+
+    <div id="app" style="padding: 0 4%;">
+
+        <style>
+            label,
+            button {
+                font-family: 'Lato', sans-serif;
+                display: block;
+            }
+        </style>
+
+        <form id="district-lookup" style="margin-top: 100px;" method="post">
+
+
+            <label style="font-size: larger;" for="address">Enter Address:</label>
+            <input style="padding:10px; font-size:larger;" type="text" id="address" name="address" value="118 NW Jackson Ave. Corvallis, Oregon 97330" style="" size="60" />
+            <button style="padding:10px; font-size:larger; margin-top:5px;" type="submit">Get District</button>
+
+            <div id="result"></div>
+        </form>
+    </div>
+
+    <div class="column main">
+
+
+        <div class="content">
+
+            <script>
+
+                domReady(function() {
+                    let form = document.getElementById('district-lookup');
+                    form.addEventListener('submit', async function(event) {
+                        event.preventDefault(); // Prevent form submissi
+                        event.stopPropagation();
+                        let address = document.getElementById('address').value;
+                        let resultDiv = document.getElementById('result');
+                        resultDiv.textContent = 'Checking...';
+
+                        try {
+                            let isInside = await isAddressInPolygon(address);
+                            resultDiv.textContent = isInside ? 'The address is inside the district.' : 'The address is outside the district.';
+                        } catch (error) {
+                            resultDiv.textContent = 'Error: ' + error.message;
+                        }
+                    });
+                })
+
+                async function loadKmlPolygon(district = "16") {
+                    let kmlOptions = {};
+
+
+                    // 2. & 3. Load KML and Create Polygon (simplified, assuming polygon coordinates are extracted)
+                    // In a real scenario, you'd parse your KML to get these paths.
+                    const kmlPolygonPath = await fetch(`/kml/house/${district}`).then(res => res.json()); // Example endpoint returning polygon coordinates
+
+                    return new google.maps.Polygon({ paths: kmlPolygonPath });
+                }
+
+
+                // 1. Geocode the Address (assuming you have a geocoding service or API call)
+                async function geocodeAddress(address) {
+                    const geocoder = new google.maps.Geocoder();
+                    return await new Promise((resolve, reject) => {
+                        geocoder.geocode({ 'address': address }, (results, status) => {
+                            if (status === 'OK') {
+                                resolve(results[0].geometry.location); // Returns LatLng object
+                            } else {
+                                reject('Geocode was not successful for the following reason: ' + status);
+                            }
+                        });
+                    });
+                }
+
+
+
+                window.loadKmlPolygon = loadKmlPolygon;
+                window.getPolygon = async function() {
+                    return await isAddressInPolygon("118 NW Jackson Ave. Corvallis, Oregon 97330");
+                };
+
+
+                // Main function to check if address is inside polygon
+                async function isAddressInPolygon(address) {
+                    try {
+                        const addressLatLng = await geocodeAddress(address);
+                        const kmlPolygon = await loadKmlPolygon("16"); // Load KML polygon for district 16
+                        // 4. Use containsLocation()
+                        const isInside = google.maps.geometry.poly.containsLocation(addressLatLng, kmlPolygon);
+
+                        // 5. Interpret the Result
+                        if (isInside) {
+                            console.log(`The address "${address}" is inside the KML polygon.`);
+                            return true;
+                        } else {
+                            console.log(`The address "${address}" is outside the KML polygon.`);
+                            return false;
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        return false;
+                    }
+                }
+
+                // Usage example
+                // isAddressInKMLPolygon("1600 Amphitheatre Parkway, Mountain View, CA");
+            </script>
+        </div><!-- end content -->
+
+
+    </div>
+
+
+    <div class="column column-right" id="picker">
+
+        <div id="picker-content">
+
+            <apex:form>
+
+                <apex:selectList size="1" styleClass="subject-picker">
+                    <apex:selectOptions value="{!subjects}" />
+                </apex:selectList>
+            </apex:form>
+
+            <div id="picker-list">
+
+            </div>
+        </div>
+    </div>
+
+
+    <noscript>
+        <style>
+            body {
+                visibility: visible;
+            }
+        </style>
+        This page requires JavaScript.
+    </noscript>
+
+    <script>
+
+
+        // Initialize and add the map
+        let map;
+
+        async function initMap() {
+            // The location of Uluru
+            const position = { lat: -25.344, lng: 131.031 };
+            // Request needed libraries.
+            //@ts-ignore
+            // const { Map } = await google.maps.importLibrary("maps");
+            // const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+            await google.maps.importLibrary("geometry");
+            await google.maps.importLibrary("geocoding");
+
+        }
+
+
+
+
+
+        domReady(() => {
+            // Display body when DOM is loaded
+            document.body.style.visibility = 'visible';
+        });
+    </script>
+
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCfWNi-jamfXgtp5iPBLn63XV_3u5RJK0c&callback=initMap">
+    </script>
+    <script src="/sw.js"></script>
+</body>
+
+
+
+
+</html>
