@@ -1,18 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from "react-router";
 import { useOutletContext } from 'react-router-dom';
+import useModal from './hooks/useModal.js';
 
 
 
 
 
-
-export default function Toc() {
+export default function Toc({ action }) {
 
     let [content, setContent] = useState([]);
     let params = useParams();
     let bookId = params.bookId;
-    let navigate = useNavigate();
+    let goto = useNavigate();
+
+    let navigate = function(path) {
+        goto(path);
+        action && action();
+    };
 
 
     useEffect(() => {
@@ -29,23 +34,25 @@ export default function Toc() {
 
 
     theList = Object.values(content).map((item, index) => {
+        let chapterNumber = index + 1;
         return (
-            <ul>
-                <li key={index} className="mb-2">
-                    <a className="cursor-pointer" onClick={() => navigate(`/book/${bookId}/` + ++index)}>{item}</a>
-                </li>
-            </ul>
+            <li className="toc-entry mb-2 border-b border-gray-200 py-6" key={index}>
+                <a className="cursor-pointer" onClick={() => navigate(`/book/${bookId}/${chapterNumber}`)}>
+                    <span className="block">Chapter {chapterNumber}</span>
+                    <span className="block">{item}</span>
+                </a>
+            </li>
         )
     });
 
 
     return (
 
-
-        <div className="overflow-y-scroll max-h-screen">
-            {theList}
+        <div className="toc sticky top-0">
+            <ul className="toc-contents">
+                {theList}
+            </ul>
         </div>
-
 
     );
 };
