@@ -26,13 +26,19 @@ const chapters = {
 
 
 
-export default function Toc() {
+export default function Toc({ action }) {
 
     // let navigate = useNavigate();
     let numbers = Object.keys(chapters);
     let titles = Object.values(chapters);
 
 
+    let goto = useNavigate();
+
+    let navigate = function(path) {
+        goto(path);
+        action && action();
+    };
 
 
     return (
@@ -44,7 +50,7 @@ export default function Toc() {
                 <ul>
                     {numbers.map((number, index) => (
                         <li className="p-1" key={index}>
-                            <Chapter chapterNumber={number} />
+                            <Chapter navigate={navigate} chapterNumber={number} />
                         </li>
                     ))}
                 </ul>

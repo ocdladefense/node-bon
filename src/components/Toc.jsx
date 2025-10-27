@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from "react-router";
-import { useOutletContext } from 'react-router-dom';
-import useModal from './hooks/useModal.js';
 
 
 

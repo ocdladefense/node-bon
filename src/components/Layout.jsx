@@ -4,6 +4,9 @@ import Modal from './Modal.jsx';
 import Toc from './Toc.jsx';
 import ChapterContents from './ChapterContents.jsx';
 
+
+
+
 export default function Layout() {
 
     const { isOpen, modalContent, openModal, closeModal } = useModal();
@@ -22,9 +25,11 @@ export default function Layout() {
     return (
         <div className="grid grid-cols-6 gap-4 bg-white">
             <Modal isOpen={isOpen} content={modalContent} onClose={closeModal} />
-            <div className="phone:hidden col-span-2 p-4 border-r border-solid border-gray-400 sticky top-0"><Toc /></div>
-            <div className="col-span-4 phone:col-span-6 p-4">
-                <button onClick={handleOpenCustomModal}>Open Custom Modal</button>
+            <div className="hidden tablet:block col-span-2 p-4 border-r border-solid border-gray-400 sticky top-0">
+                <Toc />
+            </div>
+            <div className="tablet:col-span-4 col-span-6 p-4">
+                <button onClick={handleOpenCustomModal}>Table of Contents</button>
                 <ChapterContents />
             </div>
         </div>

@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router";
 
 
 
-export default function Chapter({ chapterNumber }) {
+export default function Chapter({ navigate, chapterNumber }) {
 
     let [chapter, setChapter] = useState(null);
 
@@ -32,7 +32,7 @@ export default function Chapter({ chapterNumber }) {
             {chapter ?
                 <div>
                     <h2 className="text-large font-bold mb-4">{chapter.name}</h2>
-                    <Documents chapterNumber={chapterNumber} docs={chapter.files} />
+                    <Documents navigate={navigate} chapterNumber={chapterNumber} docs={chapter.files} />
                 </div>
                 : ""}
         </div>
@@ -41,9 +41,7 @@ export default function Chapter({ chapterNumber }) {
 };
 
 
-function Documents({ docs, chapterNumber }) {
-
-    let navigate = useNavigate();
+function Documents({ navigate, docs, chapterNumber }) {
 
     return (
         <div className="documents mb-8">
