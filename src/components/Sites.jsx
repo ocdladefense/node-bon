@@ -76,7 +76,7 @@ export default function Sites() {
                             </a>
                         </li>
                         <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://lod2.ocdla.org" target="_new">
+                            <a className="cursor-pointer" href="https://bon.ocdla.org" target="_new">
                                 <span className="block">Books Online Prototype 2</span>
                                 <span className="block">bon.ocdla.org</span>
                             </a>
