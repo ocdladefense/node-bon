@@ -1,7 +1,7 @@
 
-import MenuTop from "./navigation/MenuTop";
-import MenuMobile from "./navigation/MenuMobile";
-import Hamburger from "./navigation/Hamburger";
+import MenuTop from "../navigation/MenuTop";
+import MenuMobile from "../navigation/MenuMobile";
+import Hamburger from "../navigation/Hamburger";
 
 
 export default function Header({ loggedIn = false }) {

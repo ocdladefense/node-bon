@@ -12,6 +12,11 @@ module.exports = env => {
             app: path.resolve(__dirname, "./src/js/index.js")
             // init_head: path.resolve(__dirname, "src/js/custom-elements.js")
         },
+        optimization: {
+            splitChunks: {
+                chunks: 'all',
+            },
+        },
         cache: {
             type: 'filesystem',
             buildDependencies: {
@@ -117,6 +122,7 @@ module.exports = env => {
                         from: path.resolve(__dirname, "data"),
                         to: path.resolve(__dirname, "dist/data")
                     },
+                    "src/map.html",
                     "src/.nojekyll",
                     "src/manifest.json",
                     "src/sw.js",

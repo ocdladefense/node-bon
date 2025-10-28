@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import Header from "./Header";
-import Footer from "./Footer";
+import Header from "./layout/Header";
+import Footer from "./layout/Footer";
 import User from '../js/models/User.js';
 import Video from '../js/models/Video.js';
 import SalesforceRestApi from '@ocdla/salesforce/SalesforceRestApi.js';

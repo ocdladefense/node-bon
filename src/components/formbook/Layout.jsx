@@ -1,6 +1,6 @@
 import { useParams } from "react-router";
 import useModal from '../hooks/useModal.js';
-import Modal from '../Modal.jsx';
+import Modal from '../ui/Modal.jsx';
 import Toc from './Toc.jsx';
 import Form from './Form.jsx';
 
