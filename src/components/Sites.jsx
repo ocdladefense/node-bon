@@ -41,7 +41,7 @@ export default function Sites() {
                         <li className="toc-entry mb-2 border-b border-gray-200 py-6">
                             <a className="cursor-pointer" href="https://ocdla.my.site.com" target="_new">
                                 <span className="block">OCDLA Store</span>
-                                <span className="block"><a href="https://ocdla.my.site.com" target="_new">www.ocdla.my.site.com</a></span>
+                                <span className="block"><a href="https://ocdla.my.site.com" target="_new">ocdla.my.site.com</a></span>
                             </a>
                         </li>
                         <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
@@ -88,7 +88,7 @@ export default function Sites() {
                             </a>
                         </li>
                         <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://thebierelibrary2.ocdla.org/" target="_new">
+                            <a className="cursor-pointer" href="https://thebierelibrary.ocdla.org/" target="_new">
                                 <span className="block">Biere Library Test Website</span>
                                 <span className="block">thebierelibrary.ocdla.org</span>
                             </a>
