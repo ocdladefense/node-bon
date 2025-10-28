@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from '../components/App';
 import BookCovers from '../components/BookCovers.jsx';
 import BonLayout from '../components/Layout.jsx';
+import Sites from '../components/Sites.jsx';
 import Layout from '../components/formbook/Layout.jsx';
 
 
@@ -39,6 +40,9 @@ root.render(
         <Routes>
             <Route path="/" element={<App />}>
                 <Route index element={<BookCovers />} />
+                <Route path="sites">
+                    <Route index element={<Sites />} />
+                </Route>
                 <Route path="formbook">
                     <Route path=":chapterId/:formId?" element={<Layout />} />
                 </Route>
