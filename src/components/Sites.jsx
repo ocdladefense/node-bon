@@ -2,8 +2,28 @@ import useModal from './hooks/useModal.js';
 import Modal from './ui/Modal.jsx';
 
 
+const ProductionSites = [
+    ["OCDLA Business Website", "https://ocdla.org"],
+    ["Library of Defense", "https://libraryofdefense.ocdla.org"],
+    ["OCDLA Store", "https://ocdla.my.site.com"],
+    ["OCDLA App", "https://ocdla.app"],
+    ["OCDLA Media App", "https://media.ocdla.org"],
+    ["Books Online", "https://bon.ocdla.org"],
+    ["ORS", "https://ors.ocdla.org"]
+];
 
-
+const DevelopmentSites = [
+    ["AppTest", "https://appdev.ocdla.org"],
+    ["Legislative District Lookup", "https://bon.ocdla.org/map.html"],
+    ["Publishing Platform", "https://publish.ocdla.org"],
+    ["Books Online Prototype 1", "https://pubs.ocdla.org"],
+    ["Books Online Prototype 2", "https://bonproto2.ocdla.org"],
+    ["Biere Library React Website", "https://thebierelibrary2.ocdla.org/"],
+    ["Biere Library Test Website", "https://thebierelibrary.ocdla.org/"],
+    ["LOD2 Development", "https://lod2.ocdla.org"],
+    ["Ciderworks", "https://ciderworks.ocdla.org/"],
+    ["Water Street Market Apartments", "https://waterstreetmarketapartments.com"]
+];
 
 export default function Sites() {
 
@@ -17,113 +37,35 @@ export default function Sites() {
 
                 <div className="toc sticky top-0">
 
-                    <h2>Production Sites</h2>
+                    <h2 className="text-xl font-bold">Production Sites</h2>
                     <ul className="toc-contents">
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6">
-                            <a className="cursor-pointer" href="https://media.ocdla.org" target="_new">
-                                <span className="block">OCDLA Media App</span>
-                                <span className="block"><a href="https://media.ocdla.org" target="_new">media.ocdla.org</a></span>
-                            </a>
-                        </li>
+                        {ProductionSites.map(([name, url]) => (
 
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6">
-                            <a className="cursor-pointer" href="https://ocdla.org" target="_new">
-                                <span className="block">OCDLA Business Website</span>
-                                <span className="block"><a href="https://ocdla.org" target="_new">www.ocdla.org</a></span>
-                            </a>
-                        </li>
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://libraryofdefense.ocdla.org" target="_new">
-                                <span className="block">Library of Defense</span>
-                                <span className="block"><a href="https://libraryofdefense.ocdla.org" target="_new">libraryofdefense.ocdla.org</a></span>
-                            </a>
-                        </li>
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6">
-                            <a className="cursor-pointer" href="https://ocdla.my.site.com" target="_new">
-                                <span className="block">OCDLA Store</span>
-                                <span className="block"><a href="https://ocdla.my.site.com" target="_new">ocdla.my.site.com</a></span>
-                            </a>
-                        </li>
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://ocdla.app" target="_new">
-                                <span className="block">OCDLA App</span>
-                                <span className="block"><a href="https://ocdla.app" target="_new">ocdla.app</a></span>
-                            </a>
-                        </li>
-
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://ors.ocdla.org" target="_new">
-                                <span className="block">ORS</span>
-                                <span className="block"><a href="https://ors.ocdla.org" target="_new">ors.ocdla.org</a></span>
-                            </a>
-                        </li>
-
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://publish.ocdla.org" target="_new">
-                                <span className="block">Publishing Platform</span>
-                                <span className="block"><a href="https://publish.ocdla.org" target="_new">publish.ocdla.org</a></span>
-                            </a>
-                        </li>
+                            <li className="toc-entry mb-2 border-b border-gray-200 py-6">
+                                <a className="cursor-pointer" href={url} target="_new">
+                                    <span className="block font-bold">{name}</span>
+                                    <span className="block">{url}</span>
+                                </a>
+                            </li>
+                        ))}
                     </ul>
 
-                    <h2>Development Sites</h2>
+
+                    <h2 className="text-xl font-bold">Development Sites</h2>
                     <ul className="toc-contents">
+                        {DevelopmentSites.map(([name, url]) => (
 
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://pubs.ocdla.org" target="_new">
-                                <span className="block">Books Online Prototype 1</span>
-                                <span className="block">pubs.ocdla.org</span>
-                            </a>
-                        </li>
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://bon.ocdla.org" target="_new">
-                                <span className="block">Books Online Prototype 2</span>
-                                <span className="block">bon.ocdla.org</span>
-                            </a>
-                        </li>
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://thebierelibrary2.ocdla.org/" target="_new">
-                                <span className="block">Biere Library React Website</span>
-                                <span className="block">thebierelibrary2.ocdla.org</span>
-                            </a>
-                        </li>
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://thebierelibrary.ocdla.org/" target="_new">
-                                <span className="block">Biere Library Test Website</span>
-                                <span className="block">thebierelibrary.ocdla.org</span>
-                            </a>
-                        </li>
-
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://ciderworks.ocdla.org/" target="_new">
-                                <span className="block">Ciderworks</span>
-                                <span className="block">ciderworks.ocdla.org</span>
-                            </a>
-                        </li>
-
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://waterstreetmarketapartments.com" target="_new">
-                                <span className="block">Water Street Market Apartments</span>
-                                <span className="block">waterstreetmarketapartments.com</span>
-                            </a>
-                        </li>
-
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://lod2.ocdla.org" target="_new">
-                                <span className="block">LOD2 Development</span>
-                                <span className="block">lod2.ocdla.org</span>
-                            </a>
-                        </li>
-                        <li className="toc-entry mb-2 border-b border-gray-200 py-6" >
-                            <a className="cursor-pointer" href="https://appdev.ocdla.org" target="_new">
-                                <span className="block">AppTest</span>
-                                <span className="block">appdev.ocdla.org</span>
-                            </a>
-                        </li>
+                            <li className="toc-entry mb-2 border-b border-gray-200 py-6">
+                                <a className="cursor-pointer" href={url} target="_new">
+                                    <span className="block font-bold">{name}</span>
+                                    <span className="block">{url}</span>
+                                </a>
+                            </li>
+                        ))}
                     </ul>
                 </div>
-
             </div>
+
         </div>
     );
 };
