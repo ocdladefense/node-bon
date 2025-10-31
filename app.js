@@ -150,6 +150,14 @@ app.get("/toc/clfb/:chapterNumber", (req, res) => {
 });
 
 
+app.get("/books", (req, res) => {
+
+    let books = fs.readFileSync('./data/books.xml');
+
+    res.setHeader('Content-Type', 'application/xml');
+    res.send(books);
+});
+
 // Todo, turn this into a POST endpoint.
 app.get("/introspect", async (req, res) => {
 

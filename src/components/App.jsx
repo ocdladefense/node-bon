@@ -2,28 +2,13 @@ import { Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Header from "./layout/Header";
 import Footer from "./layout/Footer";
-import User from '../js/models/User.js';
-import Video from '../js/models/Video.js';
+// import User from '../js/models/User.js';
 import SalesforceRestApi from '@ocdla/salesforce/SalesforceRestApi.js';
 import { getCookie } from '@ocdla/salesforce/CookieUtils.js';
-import VideoDataParser from "../js/controllers/VideoDataParser.js";
-import Cache from '../js/controllers/Cache.js';
-// import { YouTubeData, getThumbs, getDurations } from '../js/controllers/YouTubeData.js';
+// import Cache from '../js/controllers/Cache.js';
 
 
-
-const SF_USER_ID = process.env.SF_USER_ID;
-const query = 'SELECT Id, Name, Description__c, Event__c, Event__r.Name, Event__r.Start_Date__c, Speakers__c, ResourceId__c, Date__c, Published__c, IsPublic__c FROM Media__c ORDER BY Event__r.Start_Date__c DESC NULLS LAST';
-
-
-
-let user = new User(SF_USER_ID || "005VC00000ET8LZ");
-let parser = new VideoDataParser();
-let access_token, instance_url;
-window.user = user;
-
-
-
+let client;
 
 
 function isLoggedIn() {
@@ -41,7 +26,7 @@ function isLoggedIn() {
 
 // @jbernal - previously in index.js
 // Retrieve video data and related thumbnail data.
-async function getVideoParser() {
+async function getApiClient() {
 
     let sessionInstanceUrl, sessionAccessToken;
     let applicationInstanceUrl, applicationAccessToken;
@@ -57,45 +42,11 @@ async function getVideoParser() {
     sessionInstanceUrl = getCookie("instanceUrl");
     sessionAccessToken = getCookie("accessToken");
 
-
-
-    if (process.env.SF_OAUTH_SESSION_ACCESS_TOKEN_OVERRIDE) {
-        sessionInstanceUrl = process.env.SF_OAUTH_SESSION_INSTANCE_URL_OVERRIDE;
-        sessionAccessToken = process.env.SF_OAUTH_SESSION_ACCESS_TOKEN_OVERRIDE;
-    }
-
-
-    let cache1 = new Cache("thumb");
-    let cache2 = new Cache("duration");
-
-
     let session = new SalesforceRestApi(sessionInstanceUrl, sessionAccessToken);
     let application = new SalesforceRestApi(applicationInstanceUrl, applicationAccessToken);
-    user.setApi(session);
+    // user.setApi(session);
 
-    let resp;
-
-    if (process.env.SF_OAUTH_SESSION_ACCESS_TOKEN_OVERRIDE) {
-        resp = await session.query(query);
-    } else {
-        resp = await application.query(query);
-    }
-    parser.parse(resp.records);
-
-    // Default thumb in case there is no available image.
-    Video.setDefaultThumbnail('http:/foobar');
-
-
-    let videos = parser.getVideos();
-
-
-
-    const resourceIds = Video.getResourceIds(videos);
-    const uncached = resourceIds;//Cache.getUncached(, cache1, cache2);
-
-
-
-    return parser;
+    return application;
 }
 
 
@@ -105,25 +56,20 @@ export default function App() {
 
     const [appReady, setAppReady] = useState(false);
 
-
-
-
     useEffect(() => {
         async function fn() {
-            parser = await getVideoParser();
+            client = await getApiClient();
             setAppReady(true);
         }
         fn();
     }, []);
 
 
-
-
     return (
         <>
             <Header loggedIn={isLoggedIn()} />
             <div className="mx-auto pt-4">
-                {!parser.isInitialized() ? <h1>My splash screen</h1> : <Outlet context={{ parser, user }} />}
+                {!appReady ? <h1>My splash screen</h1> : <Outlet context={{ client }} />}
             </div>
             <Footer />
         </>
