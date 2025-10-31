@@ -20,7 +20,7 @@ export default function Toc({ action }) {
 
     useEffect(() => {
         async function fn() {
-            let resp = await fetch(`/toc/${bookId}`).then(resp => resp.json());
+            let resp = await fetch(`/toc/tnb`).then(resp => resp.json());
             setContent(resp);
         }
         fn();

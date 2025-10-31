@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from "react-router";
+import { getContent } from '../js/utils/book.js';
 
 
 
+/*
 async function getBonChapter(book = "tnb", chapter = "1") {
 
     return await fetch(`/data/${book}/${book}-${chapter}.html`).then(resp => resp.text());
 }
 
 window.getBonChapter = getBonChapter;
-
+*/
 
 
 
@@ -26,7 +28,7 @@ export default function ChapterContents() {
 
     useEffect(() => {
         async function fn() {
-            let resp = await getBonChapter(bookName, chapterId);
+            let resp = await getContent(bookName, chapterId);
             setContent(resp);
         }
         fn();

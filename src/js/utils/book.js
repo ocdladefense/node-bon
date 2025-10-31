@@ -20,11 +20,7 @@ export async function loadIndex() {
  * @return {string} The text content of the chapter.
  */
 export async function loadChapter(book, chapter) {
-    const url = `https://pubs.ocdla.org/${book}/${chapter}`;
-    const req = new Request(url);
-    const client = new HttpClient();
-    const resp = await client.send(req);
-    const html = await resp.text();
+    let html = await fetch(`/data/${book}/${book}-${chapter}.html`).then(resp => resp.text());
 
     const parser = new DOMParser();
     return parser.parseFromString(html, "text/html");
@@ -37,8 +33,10 @@ export function getChapterList(book, index) {
     return toc.getEntries();
 }
 
-export function getBookList(index) {
-    if (!index) return null;
+export async function getBookList() {
+    if (!index) {
+        index = await loadIndex();
+    }
     const elems = [...index.querySelectorAll('book')];
     const bookList = elems.map((elem) => {
         return {
@@ -61,7 +59,10 @@ export function getBookList(index) {
    */
 export async function getContent(book, unit) {
 
-
+    if (book == "tnb" || book == "clfb") {
+        // For The New Bonaventura and The Cloud of Unknowing, load the chapter directly.
+        return await fetch(`/data/${book}/${book}-${unit}.html`).then(resp => resp.text());
+    }
     // Display the content of the chapter.
     return loadChapter(book, unit).then((doc) => {
 
