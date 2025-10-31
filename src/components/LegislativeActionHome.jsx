@@ -10,7 +10,7 @@ export default function LegislativeActionHome() {
                 <h2 className="text-xl font-bold">Legislative Action</h2>
                 <p>Welcome to the Legislative Action section. Please select a category to view the list of Oregon legislators.</p>
                 <ul>
-                    <li><a href="/action/representatives">House Representatives</a></li>
+                    <li><a href="/action/representatives">Representatives</a></li>
                     <li><a href="/action/senators">Senators</a></li>
                 </ul>
 
