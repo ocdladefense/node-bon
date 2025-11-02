@@ -1,5 +1,5 @@
 // import HttpClient from "@ocdla/lib-http/HttpClient.js";
-// import TableOfContents from "@ocdla/table-of-contents";
+import TableOfContents from "@ocdla/table-of-contents";
 
 let index;
 
@@ -26,10 +26,13 @@ export async function loadChapter(book, chapter) {
     return parser.parseFromString(html, "text/html");
 }
 
-export function getChapterList(book, index) {
-    if (!index) return '';
+export async function getChapterList(book) {
+    if (!index) {
+        index = await loadIndex();
+    }
     const elems = index.querySelectorAll(`book[shortName="${book}"] > * > :is(part, chapter, appendix)`);
     const toc = TableOfContents.fromXml(elems);
+
     return toc.getEntries();
 }
 

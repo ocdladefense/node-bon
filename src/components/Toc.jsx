@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from "react-router";
-
+import { getChapterList } from '../js/utils/book';
 
 
 
 
 export default function Toc({ action }) {
 
-    let [content, setContent] = useState([]);
+    let [chapterList, setChapterList] = useState([]);
     let params = useParams();
     let bookId = params.bookId;
     let goto = useNavigate();
@@ -20,8 +20,8 @@ export default function Toc({ action }) {
 
     useEffect(() => {
         async function fn() {
-            let resp = await fetch(`/toc/tnb`).then(resp => resp.json());
-            setContent(resp);
+            let chapterList = await getChapterList(bookId);
+            setChapterList(chapterList);
         }
         fn();
     }, []);
@@ -31,13 +31,13 @@ export default function Toc({ action }) {
 
 
 
-    theList = Object.values(content).map((item, index) => {
+    theList = chapterList.map((entry, index) => {
         let chapterNumber = index + 1;
         return (
             <li className="toc-entry mb-2 border-b border-gray-200 py-6" key={index}>
-                <a className="cursor-pointer" onClick={() => navigate(`/book/${bookId}/${chapterNumber}`)}>
-                    <span className="block">Chapter {chapterNumber}</span>
-                    <span className="block">{item}</span>
+                <a className="cursor-pointer" onClick={() => navigate(`/book/${bookId}/${entry.getUnit()}`)}>
+                    <span style={{ color: "rgb(85,100,141)", fontWeight: "bold" }} className="block">{entry.getHeading()}</span>
+                    <span className="block">{entry.getName()}</span>
                 </a>
             </li>
         )
@@ -46,7 +46,7 @@ export default function Toc({ action }) {
 
     return (
 
-        <div className="toc sticky top-0">
+        <div className="toc">
             <ul className="toc-contents">
                 {theList}
             </ul>

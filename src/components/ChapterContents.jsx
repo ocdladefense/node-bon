@@ -4,18 +4,6 @@ import { getContent } from '../js/utils/book.js';
 
 
 
-/*
-async function getBonChapter(book = "tnb", chapter = "1") {
-
-    return await fetch(`/data/${book}/${book}-${chapter}.html`).then(resp => resp.text());
-}
-
-window.getBonChapter = getBonChapter;
-*/
-
-
-
-
 
 export default function ChapterContents() {
 
