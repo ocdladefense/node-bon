@@ -26,7 +26,7 @@ export default function BookCovers() {
             return (
                 <div className="col-span-4 phone:col-span-6">
                     <a className="cursor-pointer" onClick={() => navigate(`/book/${book.shortName}/1`)}>
-                        <div style={{ color: '#fff', backgroundColor: '#1329a8ff', height: '200px', paddingTop: '50px', textAlign: 'center', marginBottom: '4px' }}>
+                        <div style={{ color: '#fff', height: '200px', paddingTop: '50px', textAlign: 'center', marginBottom: '4px' }} className="bg-ocdla-dark-blue px-4 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300">
                             <strong>{book.name}</strong>
                         </div>
                     </a>

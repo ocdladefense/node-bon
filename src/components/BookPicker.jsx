@@ -3,7 +3,7 @@
 
 export default function BookPicker() {
     return (
-        <div id="bookpicker" class="sticky top-0 z-5 bg-white lg:static lg:top-auto lg:z-auto lg:bg-transparent overflow-x-clip">
+        <div id="bookpicker" class="top-0 z-5 bg-white lg:static lg:top-auto lg:z-auto lg:bg-transparent overflow-x-clip">
             <section class="flex items-center border border-t-0 p-4 capitalize text-black lg:h-16">
                 <ul class="flex flex-wrap items-center whitespace-pre">
                     <li>

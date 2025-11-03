@@ -66,7 +66,7 @@ export default function App() {
 
 
     return (
-        <div class="container mx-auto border-x">
+        <div className="tablet:container mx-auto">
             <Header loggedIn={isLoggedIn()} />
             <div className="mx-auto pt-4">
                 {!appReady ? <h1>My splash screen</h1> : <Outlet context={{ client }} />}

@@ -6,24 +6,27 @@ import Toc from './Toc.jsx';
 import ChapterContents from './ChapterContents.jsx';
 import BookHeader from './BookHeader.jsx';
 import BookPicker from './BookPicker.jsx';
-import { getBookMetadata } from '../js/utils/book.js';
+import { getBookMetadata, getChapterMetadata } from '../js/utils/book.js';
 
 
 export default function Layout() {
 
     const { isOpen, modalContent, openModal, closeModal } = useModal();
     let params = useParams();
-    let bookName = params.bookId;
+    let bookId = params.bookId;
     let chapterId = params.chapterId;
     let [book, setBook] = useState({ title: "", edition: "" });
+    let [chapter, setChapter] = useState({ title: "", editor: "", edition: "" });
 
     useEffect(() => {
         async function fn() {
-            let metadata = await getBookMetadata(bookName);
-            setBook(metadata);
+            let book = await getBookMetadata(bookId);
+            let chapter = await getChapterMetadata(bookId, chapterId);
+            setBook(book);
+            setChapter(chapter);
         }
         fn();
-    }, [bookName]);
+    }, [chapterId, bookId]);
 
 
     let title = "Table of Contents";
@@ -48,7 +51,7 @@ export default function Layout() {
                 </div>
                 <div className="tablet:col-span-6 col-span-8 p-4">
                     <button onClick={handleOpenCustomModal}>Table of Contents</button>
-                    <ChapterContents />
+                    <ChapterContents label={chapter.label} name={chapter.name} authors={chapter.authors} bookId={bookId} />
                 </div>
             </div>
         </>

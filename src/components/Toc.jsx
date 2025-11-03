@@ -34,7 +34,7 @@ export default function Toc({ action }) {
     theList = chapterList.map((entry, index) => {
         let chapterNumber = index + 1;
         return (
-            <li className="toc-entry mb-2 border-b border-gray-200 py-6" key={index}>
+            <li className="toc-entry mb-2 border-b border-gray-200 py-[0.45rem]" key={index}>
                 <a className="cursor-pointer" onClick={() => navigate(`/book/${bookId}/${entry.getUnit()}`)}>
                     <span style={{ color: "rgb(85,100,141)", fontWeight: "bold" }} className="block">{entry.getHeading()}</span>
                     <span className="block">{entry.getName()}</span>

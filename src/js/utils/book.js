@@ -51,6 +51,24 @@ export async function getBookMetadata(bookShortCode) {
     };
 }
 
+export async function getChapterMetadata(bookId, chapterId) {
+    if (!index) {
+        index = await loadIndex();
+    }
+    let elem = index.getElementById(`${bookId}-${chapterId}`);
+    const label = elem.getAttribute("label");
+    const name = elem.getAttribute("name");
+    const authors = elem.getAttribute("authors");
+
+    console.log(label, name, authors);
+
+    return {
+        label: label,
+        name: name,
+        authors: authors
+    };
+}
+
 export async function getBookList() {
     if (!index) {
         index = await loadIndex();

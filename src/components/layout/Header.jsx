@@ -45,7 +45,7 @@ export default function Header({ loggedIn = false }) {
     // 
 
     return (
-        <header className="w-full mb-0 py-1 sticky top-0 bg-default-background z-50">
+        <header className="w-full mb-0 py-1 sticky top-0 z-50 bg-white">
             <nav>
 
                 <ul className="inline-block" style={{ width: "100%" }}>
