@@ -36,6 +36,21 @@ export async function getChapterList(book) {
     return toc.getEntries();
 }
 
+
+export async function getBookMetadata(bookShortCode) {
+    if (!index) {
+        index = await loadIndex();
+    }
+    const title = index.querySelector(`book[shortName="${bookShortCode}"] meta[name="title"]`);
+    const edition = index.querySelector(`book[shortName="${bookShortCode}"] meta[name="edition"]`);
+    console.log(title, edition);
+
+    return {
+        title: title.getAttribute("content"),
+        edition: edition.getAttribute("content")
+    };
+}
+
 export async function getBookList() {
     if (!index) {
         index = await loadIndex();

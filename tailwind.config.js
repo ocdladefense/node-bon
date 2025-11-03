@@ -27,6 +27,8 @@ module.exports = {
                 marketing: ["Marketing", ...defaultTheme.fontFamily.sans]
             },
             colors: {
+                "lod-light": "rgb(219 228 243)",
+                "ocdla-dark-blue": "rgb(28 30 60)",
                 "wb-brown": "#794850", // ferra
                 "menu": "rgba(255, 255, 255, 0.6)",
                 "wb-cordovan": "#7D4F52",

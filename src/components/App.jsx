@@ -66,13 +66,13 @@ export default function App() {
 
 
     return (
-        <>
+        <div class="container mx-auto border-x">
             <Header loggedIn={isLoggedIn()} />
             <div className="mx-auto pt-4">
                 {!appReady ? <h1>My splash screen</h1> : <Outlet context={{ client }} />}
             </div>
             <Footer />
-        </>
+        </div>
     );
 }
 

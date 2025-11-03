@@ -1,16 +1,32 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from "react-router";
 import useModal from './hooks/useModal.js';
 import Modal from './ui/Modal.jsx';
 import Toc from './Toc.jsx';
 import ChapterContents from './ChapterContents.jsx';
-
-
+import BookHeader from './BookHeader.jsx';
+import BookPicker from './BookPicker.jsx';
+import { getBookMetadata } from '../js/utils/book.js';
 
 
 export default function Layout() {
 
     const { isOpen, modalContent, openModal, closeModal } = useModal();
+    let params = useParams();
+    let bookName = params.bookId;
+    let chapterId = params.chapterId;
+    let [book, setBook] = useState({ title: "", edition: "" });
 
-    let title = "MY TOC";
+    useEffect(() => {
+        async function fn() {
+            let metadata = await getBookMetadata(bookName);
+            setBook(metadata);
+        }
+        fn();
+    }, [bookName]);
+
+
+    let title = "Table of Contents";
 
     const handleOpenCustomModal = () => {
         openModal(
@@ -22,16 +38,20 @@ export default function Layout() {
     };
 
     return (
-        <div className="grid grid-cols-8 gap-4 bg-white">
-            <Modal isOpen={isOpen} content={modalContent} onClose={closeModal} />
-            <div style={{ position: "sticky", top: "75px", height: "100vh", overflowY: "auto" }} className="hidden tablet:block col-span-2 p-4 border-r border-solid border-gray-400">
-                <Toc />
+        <>
+            <BookPicker />
+            <BookHeader title={book.title} edition={book.edition} />
+            <div className="grid grid-cols-8 gap-4 bg-white">
+                <Modal isOpen={isOpen} content={modalContent} onClose={closeModal} />
+                <div style={{ position: "sticky", top: "75px", height: "100vh", overflowY: "auto" }} className="hidden tablet:block col-span-2 p-4 border-r border-solid border-gray-400">
+                    <Toc />
+                </div>
+                <div className="tablet:col-span-6 col-span-8 p-4">
+                    <button onClick={handleOpenCustomModal}>Table of Contents</button>
+                    <ChapterContents />
+                </div>
             </div>
-            <div className="tablet:col-span-6 col-span-8 p-4">
-                <button onClick={handleOpenCustomModal}>Table of Contents</button>
-                <ChapterContents />
-            </div>
-        </div>
+        </>
     );
 };
 
