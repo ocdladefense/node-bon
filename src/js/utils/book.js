@@ -42,11 +42,13 @@ export async function getBookMetadata(bookShortCode) {
         index = await loadIndex();
     }
     const title = index.querySelector(`book[shortName="${bookShortCode}"] meta[name="title"]`);
+    const editor = index.querySelector(`book[shortName="${bookShortCode}"] meta[name="editor"]`);
     const edition = index.querySelector(`book[shortName="${bookShortCode}"] meta[name="edition"]`);
-    console.log(title, edition);
+    console.log(title, editor, edition);
 
     return {
         title: title.getAttribute("content"),
+        editor: editor.getAttribute("content"),
         edition: edition.getAttribute("content")
     };
 }
@@ -56,10 +58,15 @@ export async function getChapterMetadata(bookId, chapterId) {
         index = await loadIndex();
     }
     let elem = index.getElementById(`${bookId}-${chapterId}`);
-    const label = elem.getAttribute("label");
-    const name = elem.getAttribute("name");
-    const authors = elem.getAttribute("authors") || elem.querySelector("meta[name='authors']").getAttribute("content");
-    console.log(elem.childre);
+    let label = elem.getAttribute("label");
+    let name = elem.getAttribute("name");
+    let authors = elem.getAttribute("authors");
+
+    if (elem.querySelector("meta[name='authors']")) {
+        authors = elem.querySelector("meta[name='authors']").getAttribute("content");
+    }
+
+    console.log(elem.children);
     console.log(label, name, authors);
 
     return {

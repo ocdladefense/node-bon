@@ -43,7 +43,7 @@ export default function Layout() {
     return (
         <>
             <BookPicker />
-            <BookHeader title={book.title} edition={book.edition} />
+            <BookHeader title={book.title} edition={book.edition} editor={book.editor} />
             <div className="grid grid-cols-8 gap-4 bg-white">
                 <Modal isOpen={isOpen} content={modalContent} onClose={closeModal} />
                 <div style={{ position: "sticky", top: "75px", height: "100vh", overflowY: "auto" }} className="hidden tablet:block col-span-2 p-4 border-r border-solid border-gray-400">
@@ -51,7 +51,7 @@ export default function Layout() {
                 </div>
                 <div className="tablet:col-span-6 col-span-8 p-4">
                     <button onClick={handleOpenCustomModal}>Table of Contents</button>
-                    <ChapterContents label={chapter.label} name={chapter.name} authors={chapter.authors} bookId={bookId} />
+                    <ChapterContents label={chapter.label} name={chapter.name} authors={chapter.authors || book.editor} bookId={bookId} />
                 </div>
             </div>
         </>
