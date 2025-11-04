@@ -58,8 +58,8 @@ export async function getChapterMetadata(bookId, chapterId) {
     let elem = index.getElementById(`${bookId}-${chapterId}`);
     const label = elem.getAttribute("label");
     const name = elem.getAttribute("name");
-    const authors = elem.querySelector("meta[name='authors']").getAttribute("content");
-    console.log(elem.children);
+    const authors = elem.getAttribute("authors") || elem.querySelector("meta[name='authors']").getAttribute("content");
+    console.log(elem.childre);
     console.log(label, name, authors);
 
     return {
