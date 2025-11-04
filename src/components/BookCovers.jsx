@@ -25,7 +25,7 @@ export default function BookCovers() {
         {books.map(book => {
             return (
                 <div style={{ height: "30%" }} className="tablet:col-span-4 col-span-6">
-                    <a className="cursor-pointer" onClick={() => navigate(`/book/${book.shortName}/1`)}>
+                    <a className="cursor-pointer" onClick={() => navigate(`/book/${book.shortName}/${book.firstChapter}`)}>
                         <div style={{ color: '#fff', textAlign: 'center', marginBottom: '4px', backgroundImage: `url(/images/covers/${book.shortName}.png)`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }} className="min-h-[200px] tablet:min-h-[480px] bg-ocdla-dark-blue px-4 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300">&nbsp;</div>
                     </a>
                     <strong>{book.name}</strong>

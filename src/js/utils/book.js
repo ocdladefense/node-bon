@@ -80,13 +80,25 @@ export async function getBookList() {
     if (!index) {
         index = await loadIndex();
     }
-    const elems = [...index.querySelectorAll('book')];
+    let elems = [...index.querySelectorAll('book')];
+
+    let firstChapters = elems.map((elem) => {
+        let firstChapter = elem.querySelector(':is(part, chapter, appendix)');
+        let attr = firstChapter.getAttribute("id");
+        let id = attr.split("-")[1];
+
+        return [elem.getAttribute("shortName"), id];
+    });
+
+    let firstChapterMap = new Map(firstChapters);
+
     const bookList = elems.map((elem) => {
         return {
             name: elem.getAttribute("name"),
             shortName: elem.getAttribute("shortName"),
-            default: elem.getAttribute("default")
-        }
+            default: elem.getAttribute("default"),
+            firstChapter: firstChapterMap.get(elem.getAttribute("shortName"))
+        };
     });
     return bookList;
 }
