@@ -268,7 +268,7 @@ app.get("/legislators/:type", async (req, res) => {
 
     });
 
-    let filtered = all.filter((leg) => leg.SessionKey.indexOf("2025R1") !== -1 && leg.Title.indexOf(req.params.type == "senators" ? "Senator" : "Representative") !== -1);
+    let filtered = all.filter((leg) => leg.SessionKey.indexOf("2025I1") !== -1 && leg.Title.indexOf(req.params.type == "senators" ? "Senator" : "Representative") !== -1);
 
     res.json(filtered.sort((a, b) => {
         return parseInt(a.DistrictNumber) - parseInt(b.DistrictNumber);
