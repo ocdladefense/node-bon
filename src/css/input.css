@@ -8,3 +8,8 @@
 .overflow-hidden {
     overflow: hidden;
 }
+
+
+.modal .toc {
+    padding-bottom: 25px;
+}

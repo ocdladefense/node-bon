@@ -46,7 +46,7 @@ export default function Toc({ action }) {
 
     return (
 
-        <div style={{ paddingBottom: "150px" }} className="toc">
+        <div className="toc pb-[150px]">
             <ul className="toc-contents">
                 {theList}
             </ul>

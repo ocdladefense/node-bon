@@ -51,7 +51,7 @@ export default function Layout() {
                 </div>
                 <div className="tablet:col-span-6 col-span-8 p-4">
                     <button onClick={handleOpenCustomModal}>Table of Contents</button>
-                    <ChapterContents label={chapter.label} name={chapter.name} authors={chapter.authors || book.editor} bookId={bookId} />
+                    <ChapterContents openModal={handleOpenCustomModal} label={chapter.label} name={chapter.name} authors={chapter.authors || book.editor} bookId={bookId} />
                 </div>
             </div>
         </>

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from "react-router";
 import { getContent } from '../js/utils/book.js';
+import { TableOfContents } from 'lucide-react';
 
 
 
-
-export default function ChapterContents({ label, name, authors }) {
+export default function ChapterContents({ label, name, authors, openModal }) {
 
     let [content, setContent] = useState(null);
     let params = useParams();
@@ -32,7 +32,7 @@ export default function ChapterContents({ label, name, authors }) {
                 <div className="video-content relative w-full">
                     <h2 className="text-3xl font-bold my-2">{label} - {name}</h2>
                     <h3 className="text-xl font-italic my-1">{authors}</h3>
-                    <h2 style={{ borderRadius: "0px 0px 8px 8px", zIndex: "100" }} className="my-0 mt-8 sticky top-0 p-4 bg-ocdla-dark-blue text-white">{bookId.toUpperCase()} | {label} - {name}</h2>
+                    <h2 style={{ borderRadius: "0px 0px 8px 8px", zIndex: "100" }} className="my-0 mt-8 sticky top-0 p-4 bg-ocdla-dark-blue text-white"><span style={{ display: "inline-block", verticalAlign: "middle", marginRight: "1.0rem" }}><a onClick={openModal}><TableOfContents /></a></span>{bookId.toUpperCase()} | {label} - {name}</h2>
                     <div className="mt-8" dangerouslySetInnerHTML={{ __html: content }} />
                 </div>
                 : ""}

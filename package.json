@@ -36,6 +36,7 @@
         "docx-preview": "^0.3.7",
         "express": "^5.1.0",
         "globals": "^15.6.0",
+        "lucide-react": "^0.552.0",
         "openai": "^4.67.3",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
