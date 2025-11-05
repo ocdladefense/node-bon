@@ -20,9 +20,14 @@ export default function BookCovers() {
         fetchBooks();
     }, []);
 
+    let customSort = (a, b) => {
+        let order = ["tnb", "dnb", "dsc", "ssm", "fsm", "im", "mhcd", "sem", "vm", "pjm"];
+        return order.indexOf(a.shortName) - order.indexOf(b.shortName);
+    };
+
     return <div className="grid grid-cols-12 gap-4 bg-white min-h-screen">
 
-        {books.map(book => {
+        {books.sort(customSort).map(book => {
             return (
                 <div style={{ height: "30%" }} className="tablet:col-span-4 col-span-6">
                     <a className="cursor-pointer" onClick={() => navigate(`/book/${book.shortName}/${book.firstChapter}`)}>
