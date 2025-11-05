@@ -13,7 +13,10 @@ const fs = require('fs');
 const xml2js = require('xml2js');
 const parseString = xml2js.parseString;
 const app = express();
+const fetch = require('node-fetch');
 const port = process.env.PORT || 80;
+
+
 
 
 function iterateDirectorySync(directoryPath) {
@@ -78,29 +81,6 @@ const metaData = {
     "17": "Chapter 17 Sentencing, Dispositional, and Post-Trial Matters",
     "18": "Chapter 18 Appeals",
     "19": "Chapter 19 Habeus Corpus"
-};
-
-const tnb = {
-    "1": "Uniform Trial Court Rules",
-    "2": "Discovery",
-    "3": "Defenses",
-    "4": "Exhibits and Creative Technology",
-    "5": "Admissibility of Electronic Evidence",
-    "6": "Demurrers",
-    "7": "As-Applied Challenges",
-    "8": "Motions in Limine",
-    "9": "Jury Selection",
-    "10": "Opening Statements",
-    "11": "Cross Examination",
-    "12": "Making a Record and Offers of Proof",
-    "13": "Mistrial",
-    "14": "Motion for Judgement of Acquittal",
-    "15": "Daredevil Direct",
-    "16": "Defense Witnesses",
-    "17": "Expert Witnesses",
-    "18": "Closing Argument",
-    "19": "Jury Instructions",
-    "20": "Motions for a New Trial and Arrest of Judgment"
 };
 
 
@@ -251,7 +231,7 @@ app.get("/oauth/api/request", async (req, res) => {
 
 app.get("/legislators/:type", async (req, res) => {
 
-    const legislators = fs.readFileSync('./data/legislators/legislators.xml', 'utf8');
+    const legislators = await fetch("https://api.oregonlegislature.gov/odata/ODataService.svc/Legislators").then(res => res.text());
     // With parser
     var parser = new xml2js.Parser(/* options */);
     let result = await parser.parseStringPromise(legislators);
@@ -273,6 +253,7 @@ app.get("/legislators/:type", async (req, res) => {
         let districtNumber = properties["d:DistrictNumber"][0]["_"];
         let emailAddress = properties["d:EmailAddress"][0];
         let title = properties["d:Title"][0];
+        let party = properties["d:Party"][0];
 
 
         return {
@@ -281,7 +262,8 @@ app.get("/legislators/:type", async (req, res) => {
             SessionKey: sessionKey,
             DistrictNumber: districtNumber,
             EmailAddress: emailAddress,
-            Title: title
+            Title: title,
+            Party: party
         };
 
     });
@@ -300,7 +282,7 @@ app.get("/legislators/:type", async (req, res) => {
 
 app.get("/legislators", async (req, res) => {
 
-    const legislators = fs.readFileSync('./data/legislators/legislators.xml', 'utf8');
+    const legislators = await fetch("https://api.oregonlegislature.gov/odata/ODataService.svc/Legislators").then(res => res.text());
     // With parser
     var parser = new xml2js.Parser(/* options */);
     let result = await parser.parseStringPromise(legislators);
