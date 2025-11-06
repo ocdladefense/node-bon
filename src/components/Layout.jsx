@@ -20,12 +20,17 @@ export default function Layout() {
     let bookId = params.bookId;
     let chapterId = params.chapterId;
     let [book, setBook] = useState({ title: "", edition: "", editor: "" });
-    let [chapter, setChapter] = useState({ label: "", name: "", authors: "" });
+    let [chapter, setChapter] = useState({ label: "", name: "", authors: "", appendices: [] });
 
     useEffect(() => {
+        const files = [{ name: "Appendix A: Glossary.pdf", url: "/appendices/glossary.pdf" },
+        { name: "Appendix B: Bibliography.pdf", url: "/appendices/bibliography.pdf" },
+        { name: "Appendix C: Index.pdf", url: "/appendices/index.pdf" }];
+
         async function fn() {
             let book = await getBookMetadata(bookId);
             let chapter = await getChapterMetadata(bookId, chapterId);
+            // chapter.appendices = files;
             setBook(book);
             setChapter(chapter);
         }
@@ -45,9 +50,6 @@ export default function Layout() {
     };
 
 
-    const files = [{ name: "Appendix A: Glossary.pdf", url: "/appendices/glossary.pdf" },
-    { name: "Appendix B: Bibliography.pdf", url: "/appendices/bibliography.pdf" },
-    { name: "Appendix C: Index.pdf", url: "/appendices/index.pdf" }];
 
     return (
         <>
@@ -63,9 +65,9 @@ export default function Layout() {
                         <div className="relative w-full">
                             <ChapterHeader label={chapter.label} name={chapter.name} authors={chapter.authors} />
                             <ChapterToolbar bookId={bookId} label={chapter.label} name={chapter.name} openModal={handleOpenCustomModal} />
-                            <Appendices files={files} />
+                            <Appendices files={chapter.appendices} />
                             <ChapterContents openModal={handleOpenCustomModal} label={chapter.label} name={chapter.name} authors={chapter.authors || book.editor} bookId={bookId} />
-                            <Appendices files={files} />
+                            <Appendices files={chapter.appendices} />
                         </div>
                     </div>
                 </div>
