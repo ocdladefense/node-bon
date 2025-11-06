@@ -3,10 +3,14 @@ import { useParams, useNavigate } from "react-router";
 import useModal from './hooks/useModal.js';
 import Modal from './ui/Modal.jsx';
 import Toc from './Toc.jsx';
-import ChapterContents from './ChapterContents.jsx';
+import ChapterContents from './chapter/ChapterContents.jsx';
 import BookHeader from './BookHeader.jsx';
 import BookPicker from './BookPicker.jsx';
 import { getBookMetadata, getChapterMetadata } from '../js/utils/book.js';
+import Appendices from './ui/Appendices.jsx';
+import ChapterHeader from './chapter/ChapterHeader.jsx';
+import ChapterToolbar from './chapter/ChapterToolbar.jsx';
+
 
 
 export default function Layout() {
@@ -15,8 +19,8 @@ export default function Layout() {
     let params = useParams();
     let bookId = params.bookId;
     let chapterId = params.chapterId;
-    let [book, setBook] = useState({ title: "", edition: "" });
-    let [chapter, setChapter] = useState({ title: "", editor: "", edition: "" });
+    let [book, setBook] = useState({ title: "", edition: "", editor: "" });
+    let [chapter, setChapter] = useState({ label: "", name: "", authors: "" });
 
     useEffect(() => {
         async function fn() {
@@ -40,6 +44,11 @@ export default function Layout() {
         );
     };
 
+
+    const files = [{ name: "Appendix A: Glossary.pdf", url: "/appendices/glossary.pdf" },
+    { name: "Appendix B: Bibliography.pdf", url: "/appendices/bibliography.pdf" },
+    { name: "Appendix C: Index.pdf", url: "/appendices/index.pdf" }];
+
     return (
         <>
             <BookPicker />
@@ -50,8 +59,15 @@ export default function Layout() {
                     <Toc />
                 </div>
                 <div className="tablet:col-span-6 col-span-8 p-4">
-                    <button onClick={handleOpenCustomModal}>Table of Contents</button>
-                    <ChapterContents openModal={handleOpenCustomModal} label={chapter.label} name={chapter.name} authors={chapter.authors || book.editor} bookId={bookId} />
+                    <div className="min-h-screen">
+                        <div className="relative w-full">
+                            <ChapterHeader label={chapter.label} name={chapter.name} authors={chapter.authors} />
+                            <ChapterToolbar bookId={bookId} label={chapter.label} name={chapter.name} openModal={openModal} />
+                            <Appendices files={files} />
+                            <ChapterContents openModal={handleOpenCustomModal} label={chapter.label} name={chapter.name} authors={chapter.authors || book.editor} bookId={bookId} />
+                            <Appendices files={files} />
+                        </div>
+                    </div>
                 </div>
             </div>
         </>
