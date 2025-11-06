@@ -6,7 +6,7 @@
 
 export default function Appendices({ files }) {
     return (
-        <div className="space-y-4">
+        <div id="appendices" className="space-y-4">
             {files.map(file => {
 
                 let parts = file.id.split('-');
