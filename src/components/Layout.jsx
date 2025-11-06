@@ -62,7 +62,7 @@ export default function Layout() {
                     <div className="min-h-screen">
                         <div className="relative w-full">
                             <ChapterHeader label={chapter.label} name={chapter.name} authors={chapter.authors} />
-                            <ChapterToolbar bookId={bookId} label={chapter.label} name={chapter.name} openModal={openModal} />
+                            <ChapterToolbar bookId={bookId} label={chapter.label} name={chapter.name} openModal={handleOpenCustomModal} />
                             <Appendices files={files} />
                             <ChapterContents openModal={handleOpenCustomModal} label={chapter.label} name={chapter.name} authors={chapter.authors || book.editor} bookId={bookId} />
                             <Appendices files={files} />
