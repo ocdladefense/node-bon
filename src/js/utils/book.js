@@ -63,6 +63,7 @@ export async function getChapterMetadata(bookId, chapterId) {
     let name = elem.getAttribute("name");
     let authors = elem.getAttribute("authors");
     const appendicesXml = [...elem.querySelectorAll('appendix')];
+    const hasAppendices = elem.querySelector('appendices') != null || appendicesXml.length > 0;
     console.log(appendicesXml);
     let appendices = appendicesXml.map((appendix) => {
         return {
@@ -83,7 +84,8 @@ export async function getChapterMetadata(bookId, chapterId) {
         label: label,
         name: name,
         authors: authors,
-        appendices: appendices
+        appendices: appendices,
+        hasAppendices: hasAppendices
     };
 }
 

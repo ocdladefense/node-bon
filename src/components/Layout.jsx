@@ -65,9 +65,9 @@ export default function Layout() {
                         <div className="relative w-full">
                             <ChapterHeader label={chapter.label} name={chapter.name} authors={chapter.authors} />
                             <ChapterToolbar bookId={bookId} label={chapter.label} name={chapter.name} openModal={handleOpenCustomModal} />
-                            {chapter.appendices.length > 0 ? <a href="#appendices" className="text-l font-bold mt-4 block relative left-0 top-0 mt-10 mr-4 text-sm text-blue-600 hover:underline">{chapter.appendices.length} Appendices in this chapter</a> : ""}
+                            {chapter.hasAppendices ? <a href="#appendices" className="text-l font-bold mt-4 block relative left-0 top-0 mt-10 mr-4 text-sm text-blue-600 hover:underline">View {chapter.appendices.length || ""} Appendices in this chapter</a> : ""}
                             <ChapterContents openModal={handleOpenCustomModal} label={chapter.label} name={chapter.name} authors={chapter.authors || book.editor} bookId={bookId} />
-                            <Appendices files={chapter.appendices} />
+                            {chapter.hasAppendices ? <Appendices files={chapter.appendices} /> : ""}
                         </div>
                     </div>
                 </div>
