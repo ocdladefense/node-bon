@@ -24,7 +24,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <script>
-        function domReady(cb) {
+        function domReady(cb)
+        {
             document.readyState === 'interactive' || document.readyState === 'complete'
                 ? cb()
                 : document.addEventListener('DOMContentLoaded', cb);
@@ -50,7 +51,15 @@
 
             <label style="font-size: larger;" for="address">Enter Address:</label>
             <input style="padding:10px; font-size:larger;" type="text" id="address" name="address" value="118 NW Jackson Ave. Corvallis, Oregon 97330" style="" size="60" />
-            <button style="padding:10px; font-size:larger; margin-top:5px;" type="submit">Get District</button>
+            <select id="district" name="district" style="padding:10px; font-size:larger; margin-top:5px;">
+                <option value="1">House District 1</option>
+                <option value="16">House District 16</option>
+                <option value="17">House District 17</option>
+                <option value="18">House District 18</option>
+                <option value="19">House District 19</option>
+            </select>
+            <button style="padding:10px; font-size:larger; margin-top:5px;" id="check-district" type="submit">Is in district?</button>
+            <button style="padding:10px; font-size:larger; margin-top:5px;" id="show-district" type="submit">Show district</button>
 
             <div id="result"></div>
         </form>
@@ -63,41 +72,119 @@
 
             <script>
 
-                domReady(function() {
+                domReady(async function()
+                {
                     let form = document.getElementById('district-lookup');
-                    form.addEventListener('submit', async function(event) {
+                    form.addEventListener('submit', async function(event)
+                    {
+
+                        let action = event.submitter.id;
                         event.preventDefault(); // Prevent form submissi
                         event.stopPropagation();
                         let address = document.getElementById('address').value;
+                        let district = document.getElementById('district').value;
                         let resultDiv = document.getElementById('result');
                         resultDiv.textContent = 'Checking...';
 
-                        try {
-                            let isInside = await isAddressInPolygon(address);
-                            resultDiv.textContent = isInside ? 'The address is inside the district.' : 'The address is outside the district.';
-                        } catch (error) {
-                            resultDiv.textContent = 'Error: ' + error.message;
+
+                        // Geocode right away so we can determine which quadrant to start the district search in.
+                        const addressLatLng = await geocodeAddress(address);
+
+
+                        // Divide and conquer here.
+                        // Divide the state into three quadrants.
+                        // Based on latitude and longitude of the address,
+                        // determine which quadrant it falls into,
+                        // then only load and check the KML polygon for that quadrant.
+
+                        let statusMessage = "";
+
+
+                        if (action === 'show-district') {
+                            // Show the district polygon on the map.
+                            const kmlPolygon = await loadKmlPolygon(district);
+                            kmlPolygon.setMap(map);
+                            resultDiv.textContent = 'District ' + district + ' displayed on map.';
+                            return;
+                        } else if (action !== 'check-district') {
+                            statusMessage = await showDistrict(addressLatLng);
                         }
+                        else if (action === 'check-district') {
+                            statusMessage = await showIsLatLngInDistrict(addressLatLng, district);
+                        }
+
+                        resultDiv.textContent = statusMessage;
+
                     });
                 })
 
-                async function loadKmlPolygon(district = "16") {
+
+                // User wnats to check if address is in a specific district.
+                async function showIsLatLngInDistrict(addressLatLng, district)
+                {
+                    let isIt = await isLatLngInDistrict(addressLatLng, district);
+
+                    return isIt ? 'The address is inside the district ' + district + '.' : 'The address is NOT inside the district ' + district + '.';
+                }
+
+
+                // User wants to find which district the address is in.
+                async function showDistrict(addressLatLng)
+                {
+
+                    let startQuadrant = getStartQuadrant(addressLatLng);
+
+                    for (let district of startQuadrant) {
+                        if (await isLatLngInDistrict(addressLatLng, district)) {
+                            return 'The address is inside the district ' + district + '.';
+                        }
+                    }
+
+
+                }
+
+
+
+
+
+                function getStartQuadrant(point)
+                {
+
+                    const urban = [15, 16, 17, 18, 19, 20, 21];
+                    const southernOregon = [1, 2, 4, 5, 6];
+                    const easternOregon = [53, 55, 57, 58, 59, 60]; // Add districts as needed
+
+                    return urban;
+                }
+
+
+                async function loadKmlPolygon(district)
+                {
                     let kmlOptions = {};
 
 
                     // 2. & 3. Load KML and Create Polygon (simplified, assuming polygon coordinates are extracted)
                     // In a real scenario, you'd parse your KML to get these paths.
-                    const kmlPolygonPath = await fetch(`/kml/house/${district}`).then(res => res.json()); // Example endpoint returning polygon coordinates
+                    const resp = await fetch(`/kml/house/${district}`);
+
+                    if (!resp.ok) {
+                        throw new Error('Could not load KML data for district ' + district);
+                    }
+
+                    let kmlPolygonPath = await resp.json(); // Example endpoint returning polygon coordinates
 
                     return new google.maps.Polygon({ paths: kmlPolygonPath });
                 }
 
 
                 // 1. Geocode the Address (assuming you have a geocoding service or API call)
-                async function geocodeAddress(address) {
+                async function geocodeAddress(address)
+                {
                     const geocoder = new google.maps.Geocoder();
-                    return await new Promise((resolve, reject) => {
-                        geocoder.geocode({ 'address': address }, (results, status) => {
+                    return await new Promise((resolve, reject) =>
+                    {
+                        geocoder.geocode({ 'address': address }, (results, status) =>
+                        {
                             if (status === 'OK') {
                                 resolve(results[0].geometry.location); // Returns LatLng object
                             } else {
@@ -109,28 +196,17 @@
 
 
 
-                window.loadKmlPolygon = loadKmlPolygon;
-                window.getPolygon = async function() {
-                    return await isAddressInPolygon("118 NW Jackson Ave. Corvallis, Oregon 97330");
-                };
-
 
                 // Main function to check if address is inside polygon
-                async function isAddressInPolygon(address) {
+                async function isLatLngInDistrict(addressLatLng, district)
+                {
                     try {
-                        const addressLatLng = await geocodeAddress(address);
-                        const kmlPolygon = await loadKmlPolygon("16"); // Load KML polygon for district 16
+
+                        const kmlPolygon = await loadKmlPolygon(district); // Load KML polygon for district
                         // 4. Use containsLocation()
                         const isInside = google.maps.geometry.poly.containsLocation(addressLatLng, kmlPolygon);
 
-                        // 5. Interpret the Result
-                        if (isInside) {
-                            console.log(`The address "${address}" is inside the KML polygon.`);
-                            return true;
-                        } else {
-                            console.log(`The address "${address}" is outside the KML polygon.`);
-                            return false;
-                        }
+                        return isInside;
                     } catch (error) {
                         console.error('Error:', error);
                         return false;
@@ -179,7 +255,8 @@
         // Initialize and add the map
         let map;
 
-        async function initMap() {
+        async function initMap()
+        {
             // The location of Uluru
             const position = { lat: -25.344, lng: 131.031 };
             // Request needed libraries.
@@ -195,7 +272,8 @@
 
 
 
-        domReady(() => {
+        domReady(() =>
+        {
             // Display body when DOM is loaded
             document.body.style.visibility = 'visible';
         });
