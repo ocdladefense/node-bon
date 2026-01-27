@@ -27,7 +27,8 @@ export async function loadChapter(book, chapter) {
 }
 
 export async function getChapterList(book) {
-    if (!index) {
+    if (!index)
+    {
         index = await loadIndex();
     }
     const elems = index.querySelectorAll(`book[shortName="${book}"] > * > :is(part, chapter, appendix)`);
@@ -38,7 +39,8 @@ export async function getChapterList(book) {
 
 
 export async function getBookMetadata(bookShortCode) {
-    if (!index) {
+    if (!index)
+    {
         index = await loadIndex();
     }
     const title = index.querySelector(`book[shortName="${bookShortCode}"] meta[name="title"]`);
@@ -55,7 +57,8 @@ export async function getBookMetadata(bookShortCode) {
 }
 
 export async function getChapterMetadata(bookId, chapterId) {
-    if (!index) {
+    if (!index)
+    {
         index = await loadIndex();
     }
     let elem = index.getElementById(`${bookId}-${chapterId}`);
@@ -73,7 +76,8 @@ export async function getChapterMetadata(bookId, chapterId) {
         };
     });
 
-    if (elem.querySelector("meta[name='authors']")) {
+    if (elem.querySelector("meta[name='authors']"))
+    {
         authors = elem.querySelector("meta[name='authors']").getAttribute("content");
     }
 
@@ -90,7 +94,8 @@ export async function getChapterMetadata(bookId, chapterId) {
 }
 
 export async function getBookList() {
-    if (!index) {
+    if (!index)
+    {
         index = await loadIndex();
     }
     let elems = [...index.querySelectorAll('book')];
@@ -127,7 +132,8 @@ export async function getBookList() {
    */
 export async function getContent(book, unit) {
 
-    if (book == "tnb" || book == "clfb") {
+    if (["tnb", "im", "clfb"].includes(book))
+    {
         // For The New Bonaventura and The Cloud of Unknowing, load the chapter directly.
         return await fetch(`/data/${book}/${book}-${unit}.html`).then(resp => resp.text());
     }
