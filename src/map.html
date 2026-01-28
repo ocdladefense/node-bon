@@ -49,17 +49,10 @@
         <form id="district-lookup" style="margin-top: 100px;" method="post">
 
 
-            <label style="font-size: larger;" for="address">Enter Address:</label>
-            <input style="padding:10px; font-size:larger;" type="text" id="address" name="address" value="118 NW Jackson Ave. Corvallis, Oregon 97330" style="" size="60" />
-            <select id="district" name="district" style="padding:10px; font-size:larger; margin-top:5px;">
-                <option value="1">House District 1</option>
-                <option value="16">House District 16</option>
-                <option value="17">House District 17</option>
-                <option value="18">House District 18</option>
-                <option value="19">House District 19</option>
-            </select>
-            <button style="padding:10px; font-size:larger; margin-top:5px;" id="check-district" type="submit">Is in district?</button>
-            <button style="padding:10px; font-size:larger; margin-top:5px;" id="show-district" type="submit">Show district</button>
+            <label>Enter Addresses (one per line):</label>
+            <textarea id="addresses" name="addresses" rows="10" cols="25">118 NW Jackson Ave. Corvallis, Oregon 97330</textarea>
+
+            <button style="padding:10px; font-size:larger; margin-top:5px;" id="show-district" type="submit">Submit</button>
 
             <div id="result"></div>
         </form>
@@ -81,100 +74,47 @@
                         let action = event.submitter.id;
                         event.preventDefault(); // Prevent form submissi
                         event.stopPropagation();
-                        let address = document.getElementById('address').value;
-                        let district = document.getElementById('district').value;
+                        let addresses = document.getElementById('addresses').value.split('\n');
                         let resultDiv = document.getElementById('result');
-                        resultDiv.textContent = 'Checking...';
-
-
-                        // Geocode right away so we can determine which quadrant to start the district search in.
-                        const addressLatLng = await geocodeAddress(address);
-
-
-                        // Divide and conquer here.
-                        // Divide the state into three quadrants.
-                        // Based on latitude and longitude of the address,
-                        // determine which quadrant it falls into,
-                        // then only load and check the KML polygon for that quadrant.
-
-                        let statusMessage = "";
-
-
-                        if (action === 'show-district') {
-                            // Show the district polygon on the map.
-                            const kmlPolygon = await loadKmlPolygon(district);
-                            kmlPolygon.setMap(map);
-                            resultDiv.textContent = 'District ' + district + ' displayed on map.';
-                            return;
-                        } else if (action !== 'check-district') {
-                            statusMessage = await showDistrict(addressLatLng);
-                        }
-                        else if (action === 'check-district') {
-                            statusMessage = await showIsLatLngInDistrict(addressLatLng, district);
-                        }
+                        let statusMessage = "Checking...";
+                        let messages = [];
 
                         resultDiv.textContent = statusMessage;
 
+                        // Geocode right away so we can determine which quadrant to start the district search in.
+                        let geocodes = await Promise.all(addresses.map(address => geocodeAddress(address)));
+                        // console.log('Geocoded Address LatLng:', addressLatLng);
+
+
+                        for (let addressLatLng of geocodes) {
+
+                            let district = await getDistrict(addressLatLng);
+                            messages.push(district);
+                        }
+
+                        resultDiv.textContent = messages.join('\n');
                     });
-                })
+                });
 
 
-                // User wnats to check if address is in a specific district.
-                async function showIsLatLngInDistrict(addressLatLng, district)
-                {
-                    let isIt = await isLatLngInDistrict(addressLatLng, district);
-
-                    return isIt ? 'The address is inside the district ' + district + '.' : 'The address is NOT inside the district ' + district + '.';
-                }
 
 
                 // User wants to find which district the address is in.
-                async function showDistrict(addressLatLng)
+                async function getDistrict(addressLatLng)
                 {
 
-                    let startQuadrant = getStartQuadrant(addressLatLng);
+                    let search = await fetch(`/kml/house/parse-districts?lat=${addressLatLng.lat()}&lng=${addressLatLng.lng()}`).then(res => res.json());
+                    console.log('Search results:', search);
 
-                    for (let district of startQuadrant) {
+                    for (let district of search) {
                         if (await isLatLngInDistrict(addressLatLng, district)) {
-                            return 'The address is inside the district ' + district + '.';
+                            return district.id;
                         }
                     }
-
-
                 }
 
 
 
-
-
-                function getStartQuadrant(point)
-                {
-
-                    const urban = [15, 16, 17, 18, 19, 20, 21];
-                    const southernOregon = [1, 2, 4, 5, 6];
-                    const easternOregon = [53, 55, 57, 58, 59, 60]; // Add districts as needed
-
-                    return urban;
-                }
-
-
-                async function loadKmlPolygon(district)
-                {
-                    let kmlOptions = {};
-
-
-                    // 2. & 3. Load KML and Create Polygon (simplified, assuming polygon coordinates are extracted)
-                    // In a real scenario, you'd parse your KML to get these paths.
-                    const resp = await fetch(`/kml/house/${district}`);
-
-                    if (!resp.ok) {
-                        throw new Error('Could not load KML data for district ' + district);
-                    }
-
-                    let kmlPolygonPath = await resp.json(); // Example endpoint returning polygon coordinates
-
-                    return new google.maps.Polygon({ paths: kmlPolygonPath });
-                }
 
 
                 // 1. Geocode the Address (assuming you have a geocoding service or API call)
@@ -202,19 +142,16 @@
                 {
                     try {
 
-                        const kmlPolygon = await loadKmlPolygon(district); // Load KML polygon for district
+                        const kmlPolygon = new google.maps.Polygon({ paths: district.googleKmlPolygon }); // Load KML polygon for district
                         // 4. Use containsLocation()
-                        const isInside = google.maps.geometry.poly.containsLocation(addressLatLng, kmlPolygon);
+                        return google.maps.geometry.poly.containsLocation(addressLatLng, kmlPolygon);
 
-                        return isInside;
                     } catch (error) {
                         console.error('Error:', error);
                         return false;
                     }
                 }
 
-                // Usage example
-                // isAddressInKMLPolygon("1600 Amphitheatre Parkway, Mountain View, CA");
             </script>
         </div><!-- end content -->
 
@@ -222,22 +159,6 @@
     </div>
 
 
-    <div class="column column-right" id="picker">
-
-        <div id="picker-content">
-
-            <apex:form>
-
-                <apex:selectList size="1" styleClass="subject-picker">
-                    <apex:selectOptions value="{!subjects}" />
-                </apex:selectList>
-            </apex:form>
-
-            <div id="picker-list">
-
-            </div>
-        </div>
-    </div>
 
 
     <noscript>
