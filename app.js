@@ -15,7 +15,7 @@ const parseString = xml2js.parseString;
 const app = express();
 const fetch = require('node-fetch');
 const port = process.env.PORT || 80;
-
+const District = require('./src/js/utils/District.js');
 
 
 
@@ -23,23 +23,27 @@ function iterateDirectorySync(directoryPath) {
 
     let files = [];
 
-    try {
+    try
+    {
         const filesAndFolders = fs.readdirSync(directoryPath);
 
         filesAndFolders.forEach(item => {
             const itemPath = path.join(directoryPath, item);
             const stats = fs.statSync(itemPath);
 
-            if (stats.isFile()) {
+            if (stats.isFile())
+            {
                 console.log(`File: ${itemPath}`);
                 files.push(path.basename(itemPath));
-            } else if (stats.isDirectory()) {
+            } else if (stats.isDirectory())
+            {
                 console.log(`Directory: ${itemPath}`);
                 // Recursively call for subdirectories
                 files = files.concat(iterateDirectorySync(itemPath));
             }
         });
-    } catch (err) {
+    } catch (err)
+    {
         console.error(`Error iterating directory: ${err.message}`);
     }
 
@@ -91,6 +95,34 @@ app.get("/toc/tnb", (req, res) => {
 });
 
 
+const geojson = fs.readFileSync(`./data/geo/house-districts.geojson`, 'utf8').trim();
+
+// parse "lng,lat" pairs separated by whitespace into [{lat, lng}, ...]
+let coords = JSON.parse(geojson);
+
+let districts = coords.features.map((district, index) => {
+    let coords = district.geometry.coordinates[0];
+    return new District(index + 1, coords);
+});
+
+
+
+
+app.get("/kml/house/parse-districts", (req, res) => {
+
+    // Correspponds loosely to Corvallis, OR.
+    let latLngTest = [parseFloat(req.query.lat), parseFloat(req.query.lng)];
+    // latLngTest = [44.547146, -123.277797];
+
+    let possibleDistricts = districts.filter(district => !district.isOutside(latLngTest));
+    console.log(`Possible districts for point ${latLngTest}:`, possibleDistricts.map(d => d.id));
+
+    return res.json(possibleDistricts);
+});
+
+
+
+
 
 app.get("/kml/house/:district", (req, res) => {
 
@@ -111,6 +143,9 @@ app.get("/kml/house/:district", (req, res) => {
 
     return res.json(coords);
 });
+
+
+
 
 
 app.get("/toc/clfb/:chapterNumber", (req, res) => {
