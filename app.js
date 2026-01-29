@@ -20,7 +20,7 @@ import cookieParser from 'cookie-parser';
 import fs from 'fs';
 // const path = require('path'); // Import the path module
 // const fs = require('fs');
-// const xml2js = require('xml2js');
+import xml2js from 'xml2js';
 // import xml2js from 'xml2js';
 const app = express();
 const port = process.env.PORT || 80;
@@ -96,6 +96,80 @@ app.get("/geocode", async (req, res) => {
     console.log(`Geocode for address "${address}":`, coords);
     res.json(coords);
 });
+
+
+
+app.get("/legislators/:type", async (req, res) => {
+
+
+    const SESSION = "2026R1";//"2025I1"; // "2026R1" doesn't begin until Feb. 2.
+
+    const legislators = await fetch("https://api.oregonlegislature.gov/odata/ODataService.svc/Legislators").then(res => res.text());
+    // With parser
+    var parser = new xml2js.Parser(/* options */);
+    let result = await parser.parseStringPromise(legislators);
+    // res.json(result);
+
+
+
+
+    let all = result.feed.entry.map(leg => {
+        let content = leg.content[0];
+        let properties = content["m:properties"][0];
+
+        if (!properties) return {};
+        console.log(properties);
+
+        let firstName = properties["d:FirstName"][0];
+        let lastName = properties["d:LastName"][0];
+        let sessionKey = properties["d:SessionKey"][0];
+        let districtNumber = properties["d:DistrictNumber"][0]["_"];
+        let emailAddress = properties["d:EmailAddress"][0];
+        let title = properties["d:Title"][0];
+        let party = properties["d:Party"][0];
+        let chamber = properties["d:Chamber"][0];
+
+
+        return {
+            FirstName: firstName,
+            LastName: lastName,
+            SessionKey: sessionKey,
+            DistrictNumber: districtNumber,
+            EmailAddress: emailAddress,
+            Title: title,
+            Party: party,
+            Chamber: chamber
+        };
+
+    });
+
+
+    // At least get current session legislators.
+    let filtered = all.filter((leg) => leg.SessionKey.indexOf(SESSION) !== -1);
+
+
+    filtered = filtered.filter(leg => leg.Chamber == (req.params.type == "senators" ? "S" : "H"));
+
+    res.json(filtered.sort((a, b) => {
+        return parseInt(a.DistrictNumber) - parseInt(b.DistrictNumber);
+    }));
+
+
+
+});
+
+
+
+app.get("/legislators", async (req, res) => {
+
+    const legislators = await fetch("https://api.oregonlegislature.gov/odata/ODataService.svc/Legislators").then(res => res.text());
+    // With parser
+    var parser = new xml2js.Parser(/* options */);
+    let result = await parser.parseStringPromise(legislators);
+    res.json(result);
+});
+
+
 
 
 app.post("/kml/house/addresses/districts", async (req, res) => {
@@ -419,65 +493,6 @@ app.get("/oauth/api/request", async (req, res) => {
 });
 
 
-app.get("/legislators/:type", async (req, res) => {
-
-    const legislators = await fetch("https://api.oregonlegislature.gov/odata/ODataService.svc/Legislators").then(res => res.text());
-    // With parser
-    var parser = new xml2js.Parser(/* options */);
-    let result = await parser.parseStringPromise(legislators);
-    // res.json(result);
-
-
-
-
-    let all = result.feed.entry.map(leg => {
-        let content = leg.content[0];
-        let properties = content["m:properties"][0];
-
-        if (!properties) return {};
-
-
-        let firstName = properties["d:FirstName"][0];
-        let lastName = properties["d:LastName"][0];
-        let sessionKey = properties["d:SessionKey"][0];
-        let districtNumber = properties["d:DistrictNumber"][0]["_"];
-        let emailAddress = properties["d:EmailAddress"][0];
-        let title = properties["d:Title"][0];
-        let party = properties["d:Party"][0];
-
-
-        return {
-            FirstName: firstName,
-            LastName: lastName,
-            SessionKey: sessionKey,
-            DistrictNumber: districtNumber,
-            EmailAddress: emailAddress,
-            Title: title,
-            Party: party
-        };
-
-    });
-
-    let filtered = all.filter((leg) => leg.SessionKey.indexOf("2025I1") !== -1 && leg.Title.indexOf(req.params.type == "senators" ? "Senator" : "Representative") !== -1);
-
-    res.json(filtered.sort((a, b) => {
-        return parseInt(a.DistrictNumber) - parseInt(b.DistrictNumber);
-    }));
-
-
-
-});
-
-
-
-app.get("/legislators", async (req, res) => {
-
-    const legislators = await fetch("https://api.oregonlegislature.gov/odata/ODataService.svc/Legislators").then(res => res.text());
-    // With parser
-    var parser = new xml2js.Parser(/* options */);
-    let result = await parser.parseStringPromise(legislators);
-    res.json(result);
-});
 
 
 
