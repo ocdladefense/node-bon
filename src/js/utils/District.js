@@ -18,7 +18,7 @@ const isEasternOregon = getIsEasternOregonTest(THE_DIVIDE);
 
 
 
-class District {
+export default class District {
 
     id;
 
@@ -52,10 +52,10 @@ class District {
 
 
 
-    isOutside(latLng) {
+    isOutside(coords) {
 
-        let lat = latLng[0];
-        let lng = latLng[1];
+        let lat = coords[1];
+        let lng = coords[0];
 
         // If the point if north of the northernmost point or south of the southernmost point,
         // it can't be within this district.
@@ -145,4 +145,4 @@ class District {
 }
 
 
-module.exports = District;
+// module.exports = District;
