@@ -3,6 +3,7 @@
     "version": "0.1.0",
     "description": "My app.",
     "main": "index.js",
+    "type": "module",
     "scripts": {
         "test": "jest",
         "babel-build": "babel src --out-dir dist --source-maps",
@@ -26,11 +27,14 @@
     "dependencies": {
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.0",
+        "@googlemaps/google-maps-services-js": "^3.4.2",
         "@ocdla/global-components": "file:dev_modules/@local/global-components",
         "@ocdla/lib-http": "^2.1.0",
         "@ocdla/salesforce": "file:dev_modules/@ocdla/salesforce",
         "@ocdla/table-of-contents": "file:dev_modules/@ocdla/table-of-contents",
         "@ocdla/view": "~2.5.0",
+        "@turf/boolean-point-in-polygon": "^7.3.3",
+        "@turf/helpers": "^7.3.3",
         "cookie-parser": "^1.4.7",
         "cookie-session": "^2.1.0",
         "docx-preview": "^0.3.7",

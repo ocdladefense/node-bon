@@ -4,18 +4,35 @@
  * So we can extract some user information.
  */
 
+import path from "path";
+import { fileURLToPath } from 'url';
 
-require('dotenv').config();
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const path = require('path'); // Import the path module
-const fs = require('fs');
-const xml2js = require('xml2js');
-const parseString = xml2js.parseString;
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+//require('dotenv').config();
+import 'dotenv/config';
+// const express = require('express');
+import express from 'express';
+// const cookieParser = require('cookie-parser');
+import cookieParser from 'cookie-parser';
+import fs from 'fs';
+// const path = require('path'); // Import the path module
+// const fs = require('fs');
+// const xml2js = require('xml2js');
+// import xml2js from 'xml2js';
 const app = express();
-const fetch = require('node-fetch');
 const port = process.env.PORT || 80;
-const District = require('./src/js/utils/District.js');
+// const point = require("@turf/helpers").point;
+import { point } from "@turf/helpers";
+import { polygon } from "@turf/helpers";
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+// const polygon = require("@turf/helpers").polygon;
+// const booleanPointInPolygon = require('@turf/boolean-point-in-polygon');
+
+import District from './src/js/utils/District.js';
+import Geocoder from './src/js/utils/Geocoder.js';
 
 
 
@@ -62,6 +79,149 @@ app.use(express.static('dist'));
 
 
 app.use(cookieParser());
+app.use(express.json());
+
+
+let houseDistricts, senateDistricts;
+
+loadHouseDistricts();
+loadSenateDistricts();
+
+
+
+app.get("/geocode", async (req, res) => {
+
+    let address = req.query.address;
+    let coords = await Geocoder.geocodeAddress(address);
+    console.log(`Geocode for address "${address}":`, coords);
+    res.json(coords);
+});
+
+
+app.post("/kml/house/addresses/districts", async (req, res) => {
+
+    const incomingData = req.body;
+    let addy1 = "118 NW Jackson Ave.Corvallis, Oregon 97330";
+    let addy2 = "327 NW Greenwood Ave Ste 303 Bend Oregon 97703";
+
+    let addresses = incomingData.addresses; // Assume this is an array of address strings
+    let coords = [];
+    let possibleDistricts = [];
+    let results = [];
+
+    coords = await Promise.all(addresses.map(async (address) => {
+        let coords = await Geocoder.geocodeAddress(address);
+        return [coords.lng, coords.lat];
+    }));
+    console.log(coords);
+    possibleDistricts = coords.map(lngLat => {
+        return houseDistricts.filter(district => !district.isOutside(lngLat));
+    });
+    console.log(possibleDistricts);
+
+
+    results = coords.map((lngLat, i) => {
+        console.log(lngLat);
+        console.log(`Finding district for point ${lngLat}...`);
+        var pt = point(lngLat);
+
+        let possibles = possibleDistricts[i];
+
+        for (let district of possibles)
+        {
+            const myPolygon = polygon([district.coords]);
+            const isInside = booleanPointInPolygon(pt, myPolygon);
+            if (isInside) return district;
+        }
+
+        return null;
+    });
+
+    return res.json(results);
+});
+
+
+
+
+app.get("/kml/house/districts", (req, res) => {
+
+
+    let latLngTest = [parseFloat(req.query.lat), parseFloat(req.query.lng)];
+    // Below for testing.
+    // Correspponds loosely to Corvallis, OR.
+    // latLngTest = [44.547146, -123.277797];
+
+    let possibleDistricts = houseDistricts.filter(district => !district.isOutside(latLngTest));
+    console.log(`Possible districts for point ${latLngTest}:`, possibleDistricts.map(d => d.id));
+
+    return res.json(possibleDistricts);
+});
+
+
+app.get("/kml/senate/districts", (req, res) => {
+
+
+    let latLngTest = [parseFloat(req.query.lat), parseFloat(req.query.lng)];
+
+    let possibleDistricts = senateDistricts.filter(district => !district.isOutside(latLngTest));
+    console.log(`Possible districts for point ${latLngTest}:`, possibleDistricts.map(d => d.id));
+
+    return res.json(possibleDistricts);
+});
+
+
+
+
+app.get("/kml/house/:district", (req, res) => {
+
+    // Load the XML in a parser.
+    const text = fs.readFileSync(`./data/geo/house-district-${req.params.district}.txt`, 'utf8').trim();
+
+    // parse "lng,lat" pairs separated by whitespace into [{lat, lng}, ...]
+    let coords = text.split(/\s+/).map(pair => {
+        const [lngStr, latStr] = pair.split(',');
+        let lng = parseFloat(lngStr);
+        const lat = parseFloat(latStr);
+        if (Number.isNaN(lng) || Number.isNaN(lat)) throw new Error('Invalid pair: ' + pair);
+        // Heuristic: if longitude looks like a positive 3-digit value (e.g. 123) but latitude is valid,
+        // it's likely a missing negative sign for west longitudes — flip it.
+        if (lng > 90 && lat >= -90 && lat <= 90) lng = -lng;
+        return { lat, lng };
+    });
+
+    return res.json(coords);
+});
+
+
+
+
+function loadHouseDistricts() {
+    const geojsonHouse = fs.readFileSync(`./data/geo/house-districts.geojson`, 'utf8').trim();
+
+    // parse "lng,lat" pairs separated by whitespace into [{lat, lng}, ...]
+    let housecoords = JSON.parse(geojsonHouse);
+
+    houseDistricts = housecoords.features.map((district, index) => {
+        let coords = district.geometry.coordinates[0];
+        return new District(index + 1, coords);
+    });
+
+}
+
+
+function loadSenateDistricts() {
+    const geojsonSenate = fs.readFileSync(`./data/geo/senate-districts.geojson`, 'utf8').trim();
+
+    // parse "lng,lat" pairs separated by whitespace into [{lat, lng}, ...]
+    let senatecoords = JSON.parse(geojsonSenate);
+
+    senateDistricts = senatecoords.features.map((district, index) => {
+        let coords = district.geometry.coordinates[0];
+        return new District(index + 1, coords);
+    });
+
+}
+
 
 
 
@@ -93,57 +253,6 @@ app.get("/toc/tnb", (req, res) => {
 
     res.json(tnb);
 });
-
-
-const geojson = fs.readFileSync(`./data/geo/house-districts.geojson`, 'utf8').trim();
-
-// parse "lng,lat" pairs separated by whitespace into [{lat, lng}, ...]
-let coords = JSON.parse(geojson);
-
-let districts = coords.features.map((district, index) => {
-    let coords = district.geometry.coordinates[0];
-    return new District(index + 1, coords);
-});
-
-
-
-
-app.get("/kml/house/parse-districts", (req, res) => {
-
-    // Correspponds loosely to Corvallis, OR.
-    let latLngTest = [parseFloat(req.query.lat), parseFloat(req.query.lng)];
-    // latLngTest = [44.547146, -123.277797];
-
-    let possibleDistricts = districts.filter(district => !district.isOutside(latLngTest));
-    console.log(`Possible districts for point ${latLngTest}:`, possibleDistricts.map(d => d.id));
-
-    return res.json(possibleDistricts);
-});
-
-
-
-
-
-app.get("/kml/house/:district", (req, res) => {
-
-    // Load the XML in a parser.
-    const text = fs.readFileSync(`./data/geo/house-district-${req.params.district}.txt`, 'utf8').trim();
-
-    // parse "lng,lat" pairs separated by whitespace into [{lat, lng}, ...]
-    let coords = text.split(/\s+/).map(pair => {
-        const [lngStr, latStr] = pair.split(',');
-        let lng = parseFloat(lngStr);
-        const lat = parseFloat(latStr);
-        if (Number.isNaN(lng) || Number.isNaN(lat)) throw new Error('Invalid pair: ' + pair);
-        // Heuristic: if longitude looks like a positive 3-digit value (e.g. 123) but latitude is valid,
-        // it's likely a missing negative sign for west longitudes — flip it.
-        if (lng > 90 && lat >= -90 && lat <= 90) lng = -lng;
-        return { lat, lng };
-    });
-
-    return res.json(coords);
-});
-
 
 
 

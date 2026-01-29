@@ -1,16 +1,23 @@
-const path = require("path");
-const webpack = require("webpack");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const CopyPlugin = require("copy-webpack-plugin");
-const Dotenv = require('dotenv-webpack');
+import path from "path";
+import { fileURLToPath } from 'url';
+import HtmlWebpackPlugin from "html-webpack-plugin";
+import CopyPlugin from "copy-webpack-plugin";
+import Dotenv from 'dotenv-webpack';
 
-module.exports = env => {
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+
+
+export default env => {
     console.log(env);
 
     return {
         entry: {
-            app: path.resolve(__dirname, "./src/js/index.js")
-            // init_head: path.resolve(__dirname, "src/js/custom-elements.js")
+            app: path.resolve(__dirname, "./src/js/index.js"),
+            // map: path.resolve(__dirname, "./src/js/map.js")
         },
         optimization: {
             splitChunks: {
