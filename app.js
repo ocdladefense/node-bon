@@ -143,6 +143,50 @@ app.post("/kml/house/addresses/districts", async (req, res) => {
 });
 
 
+app.post("/kml/senate/addresses/districts", async (req, res) => {
+
+    const incomingData = req.body;
+    let addy1 = "118 NW Jackson Ave.Corvallis, Oregon 97330";
+    let addy2 = "327 NW Greenwood Ave Ste 303 Bend Oregon 97703";
+
+    let addresses = incomingData.addresses; // Assume this is an array of address strings
+    let coords = [];
+    let possibleDistricts = [];
+    let results = [];
+
+    coords = await Promise.all(addresses.map(async (address) => {
+        let coords = await Geocoder.geocodeAddress(address);
+        return [coords.lng, coords.lat];
+    }));
+    console.log(coords);
+    possibleDistricts = coords.map(lngLat => {
+        return senateDistricts.filter(district => !district.isOutside(lngLat));
+    });
+    console.log(possibleDistricts);
+
+
+    results = coords.map((lngLat, i) => {
+        console.log(lngLat);
+        console.log(`Finding district for point ${lngLat}...`);
+        var pt = point(lngLat);
+
+        let possibles = possibleDistricts[i];
+
+        for (let district of possibles)
+        {
+            const myPolygon = polygon([district.coords]);
+            const isInside = booleanPointInPolygon(pt, myPolygon);
+            if (isInside) return district;
+        }
+
+        return null;
+    });
+
+    results = results.map(district => district ? district.id : null);
+
+    return res.json(results);
+});
+
 
 
 app.get("/kml/house/districts", (req, res) => {
