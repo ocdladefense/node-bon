@@ -137,6 +137,8 @@ app.post("/kml/house/addresses/districts", async (req, res) => {
         return null;
     });
 
+    results = results.map(district => district ? district.id : null);
+
     return res.json(results);
 });
 
