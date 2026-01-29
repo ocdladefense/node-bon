@@ -31,6 +31,56 @@
                 : document.addEventListener('DOMContentLoaded', cb);
         }
     </script>
+
+    <style>
+        .address-field {
+            font-weight: bold;
+            min-width: 600px;
+            display: inline-block;
+        }
+
+        .house-district-field {
+            color: blue;
+            width: 150px;
+            display: inline-block;
+        }
+
+        .senate-district-field {
+            color: green;
+            width: 150px;
+            display: inline-block;
+        }
+
+        .address-field,
+        .house-district-field,
+        .senate-district-field {
+            margin-right: 10px;
+            font-size: larger;
+            padding: 15px;
+        }
+
+        .table {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table-row {
+            display: table-row;
+        }
+
+        .table-cell {
+            display: table-cell;
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .table-cell:nth-child(1) {
+            width: 100%;
+        }
+    </style>
 </head>
 
 <body id="root" class="text-sm invisible bg-default-background">
@@ -120,6 +170,31 @@ Criminal Appellate 1175 Court St NE Salem Oregon 97301-4030
 
             <script>
 
+                class LegislativeDistrictLookupResult
+                {
+
+                    results = {};
+
+                    setSenate(address, district)
+                    {
+                        if (!this.results[address]) {
+                            this.results[address] = { houseDistrict: null, senateDistrict: null };
+                        }
+                        this.results[address].senateDistrict = district;
+                    }
+
+                    setHouse(address, district)
+                    {
+                        if (!this.results[address]) {
+                            this.results[address] = { houseDistrict: null, senateDistrict: null };
+                        }
+                        this.results[address].houseDistrict = district;
+                    }
+
+
+                }
+
+
                 domReady(async function()
                 {
                     let form = document.getElementById('district-lookup');
@@ -127,7 +202,7 @@ Criminal Appellate 1175 Court St NE Salem Oregon 97301-4030
                     {
 
                         let action = event.submitter.id;
-                        event.preventDefault(); // Prevent form submissi
+                        event.preventDefault(); // Prevent form submission.
                         event.stopPropagation();
                         let addresses = document.getElementById('addresses').value.split(/\r?\n/).map(addr => addr.trim()).filter(addr => addr.length > 0);
                         let resultDiv = document.getElementById('result');
@@ -136,29 +211,147 @@ Criminal Appellate 1175 Court St NE Salem Oregon 97301-4030
 
                         resultDiv.textContent = statusMessage;
 
+                        let body = { addresses: addresses };
+                        let districts = await fetch(`/kml/house/addresses/districts`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(body)
+                        }).then(res => res.json());
+
+                        console.log('Districts:', districts);
+
+                        return;
+                        let results = new LegislativeDistrictLookupResult();
                         // Geocode right away so we can determine which quadrant to start the district search in.
-                        let geocodes = await Promise.all(addresses.map(address => geocodeAddress(address)));
+                        let geocodes = await Promise.all(addresses.map(address => geoCodeFromServer(address)));
                         // console.log('Geocoded Address LatLng:', addressLatLng);
 
 
-                        for (let addressLatLng of geocodes) {
-
-                            let district = await getDistrict(addressLatLng);
-                            messages.push(district);
+                        for (let i = 0; i < addresses.length; i++) {
+                            if (null == geocodes[i]) {
+                                messages.push(`Could not geocode address: "${addresses[i]}"`);
+                                continue;
+                            }
+                            messages.push(`Geocode for address "${addresses[i]}": ${JSON.stringify(geocodes[i])}`);
                         }
 
-                        resultDiv.textContent = messages.join('\n');
+
+
+                        for (let i = 0; i < geocodes.length; i++) {
+                            let addressLatLng = geocodes[i];
+                            if (null == addressLatLng) {
+                                messages.push("House district: null.");
+                                continue;
+                            }
+                            let district = await getDistrict('house', addressLatLng);
+                            results.setHouse(addresses[i], district);
+                            // messages.push("House district: " + district);
+                        }
+
+
+
+                        for (let i = 0; i < geocodes.length; i++) {
+                            let addressLatLng = geocodes[i];
+                            if (null == addressLatLng) {
+                                messages.push("Senate district: null.");
+                                continue;
+                            }
+                            let district = await getDistrict('senate', addressLatLng);
+                            results.setSenate(addresses[i], district);
+                            // messages.push("Senate district: " + district);
+                        }
+
+                        console.log('Final Results:', results);
+
+
+
+                        resultDiv.appendChild(LookupTable(results));
                     });
                 });
 
 
+                function LookupTable(results)
+                {
+
+                    let table = document.createElement('div');
+                    table.classList.add('table');
+                    table.classList.add('table-bordered');
+                    table.classList.add('table-striped');
+                    table.classList.add('table-hover');
+
+                    let labelRow = document.createElement('div');
+                    labelRow.classList.add('table-row');
+
+                    let addressLabel = document.createElement('span');
+                    addressLabel.textContent = "Address";
+
+                    let houseDistrictLabel = document.createElement('span');
+                    houseDistrictLabel.textContent = "House District";
+
+                    let senateDistrictLabel = document.createElement('span');
+                    senateDistrictLabel.textContent = "Senate District";
+
+                    [addressLabel, houseDistrictLabel, senateDistrictLabel].forEach(label =>
+                    {
+                        label.classList.add('table-cell');
+                        label.style.fontWeight = 'bold';
+                        label.style.fontSize = 'larger';
+                    });
+
+                    labelRow.appendChild(addressLabel);
+                    labelRow.appendChild(houseDistrictLabel);
+                    labelRow.appendChild(senateDistrictLabel);
+                    table.appendChild(labelRow);
+
+                    let rows = Object.entries(results.results).map(([address, districts]) =>
+                    {
+                        return LookupResult(address, districts.houseDistrict, districts.senateDistrict);
+                    });
+                    rows.forEach(row => table.appendChild(row));
+
+                    return table;
+                }
+
+
+                function LookupResult(address, houseDistrict, senateDistrict)
+                {
+                    let addressField = document.createElement('span');
+                    addressField.textContent = address;
+                    addressField.classList.add('address-field');
+
+                    let houseDistrictField = document.createElement('span');
+                    houseDistrictField.textContent = houseDistrict;
+                    houseDistrictField.classList.add('house-district-field');
+
+                    let senateDistrictField = document.createElement('span');
+                    senateDistrictField.textContent = senateDistrict;
+                    senateDistrictField.classList.add('senate-district-field');
+
+                    [addressField, houseDistrictField, senateDistrictField].forEach(field =>
+                    {
+                        field.classList.add('table-cell');
+                    });
+
+                    let container = document.createElement('div');
+                    container.classList.add('table-row');
+
+                    container.appendChild(addressField);
+                    container.appendChild(houseDistrictField);
+                    container.appendChild(senateDistrictField);
+
+                    return container;
+                }
 
 
                 // User wants to find which district the address is in.
-                async function getDistrict(addressLatLng)
+                async function getDistrict(type, addressLatLng)
                 {
-
-                    let search = await fetch(`/kml/house/parse-districts?lat=${addressLatLng.lat()}&lng=${addressLatLng.lng()}`).then(res => res.json());
+                    if (null == addressLatLng) {
+                        return "Could not geocode address.";
+                    }
+                    let search = await fetch(`/kml/${type}/districts?lat=${addressLatLng.lat}&lng=${addressLatLng.lng}`).then(res => res.json());
                     console.log('Search results:', search);
 
                     for (let district of search) {
@@ -170,7 +363,10 @@ Criminal Appellate 1175 Court St NE Salem Oregon 97301-4030
 
 
 
-
+                async function geoCodeFromServer(address)
+                {
+                    return await fetch(`/geocode?address=${encodeURIComponent(address)}`).then(res => res.json());
+                }
 
                 // 1. Geocode the Address (assuming you have a geocoding service or API call)
                 async function geocodeAddress(address)
