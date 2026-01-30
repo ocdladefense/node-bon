@@ -29,5 +29,6 @@
     "[javascript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features"
     },
-    "xml.preferences.showSchemaDocumentationType": "none"
+    "xml.preferences.showSchemaDocumentationType": "none",
+    "prettier.enable": true
 }
