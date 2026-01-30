@@ -27,7 +27,13 @@ _Note: This project can be run in two target environments: <code>npm run watch</
 1. Run <code>npm run build-prod</code> to build the appropriate code in <code>dist/</code>.
 2. Run <code>npm run start-server</code>.
 3. Disable any already-running server software (these will conflict with the port 80 config of Express server).
-4. Navigate to [Localhost](http://localhost).
+4. Navigate to [http://localhost](http://localhost).
+
+## Using PM2
+Use <code>pm2</code> to run this server as a daemon.
+* <code>sudo pm2 status</code> - Show the status of currently running node servers.
+* <code>sudo pm2 restart [app-name]</code> - Restart an app that has been updated.
+* <code>sudo pm2 logs [app-name]</code> - Show the stdout and stderr logs for the specified app.
 
 ### Webpack server environment:
 1. Preview the base website using <code>npm run watch</code>.
