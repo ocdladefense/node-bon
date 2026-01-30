@@ -6,34 +6,21 @@
 
 import path from "path";
 import { fileURLToPath } from 'url';
-
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-//require('dotenv').config();
 import 'dotenv/config';
-// const express = require('express');
 import express from 'express';
-// const cookieParser = require('cookie-parser');
 import cookieParser from 'cookie-parser';
 import fs from 'fs';
-// const path = require('path'); // Import the path module
-// const fs = require('fs');
 import xml2js from 'xml2js';
-// import xml2js from 'xml2js';
-const app = express();
-const port = process.env.PORT || 80;
-// const point = require("@turf/helpers").point;
 import { point } from "@turf/helpers";
 import { polygon } from "@turf/helpers";
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
-// const polygon = require("@turf/helpers").polygon;
-// const booleanPointInPolygon = require('@turf/boolean-point-in-polygon');
-
 import District from './src/js/utils/District.js';
 import Geocoder from './src/js/utils/Geocoder.js';
 
+const app = express();
+const port = process.env.PORT || 80;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 function iterateDirectorySync(directoryPath) {
@@ -67,17 +54,12 @@ function iterateDirectorySync(directoryPath) {
     return files;
 }
 
-// Example usage:
-
-
 
 const SF_ACCESS_TOKEN = process.env.SF_OAUTH_SESSION_ACCESS_TOKEN_OVERRIDE;
 
 
 // Serve static files from the 'dist' directory
 app.use(express.static('dist'));
-
-
 app.use(cookieParser());
 app.use(express.json());
 
