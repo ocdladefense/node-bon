@@ -144,5 +144,52 @@ export default class District {
 
 }
 
+async function doClientCode() {
+    // Geocode right away so we can determine which quadrant to start the district search in.
+    let geocodes = await Promise.all(addresses.map(address => geoCodeFromServer(address)));
+    // console.log('Geocoded Address LatLng:', addressLatLng);
 
-// module.exports = District;
+
+    for (let i = 0; i < addresses.length; i++)
+    {
+        if (null == geocodes[i])
+        {
+            messages.push(`Could not geocode address: "${addresses[i]}"`);
+            continue;
+        }
+        messages.push(`Geocode for address "${addresses[i]}": ${JSON.stringify(geocodes[i])}`);
+    }
+
+
+
+    for (let i = 0; i < geocodes.length; i++)
+    {
+        let addressLatLng = geocodes[i];
+        if (null == addressLatLng)
+        {
+            messages.push("House district: null.");
+            continue;
+        }
+        let district = await getDistrict('house', addressLatLng);
+        results.setHouse(addresses[i], district);
+        // messages.push("House district: " + district);
+    }
+
+
+
+    for (let i = 0; i < geocodes.length; i++)
+    {
+        let addressLatLng = geocodes[i];
+        if (null == addressLatLng)
+        {
+            messages.push("Senate district: null.");
+            continue;
+        }
+        let district = await getDistrict('senate', addressLatLng);
+        results.setSenate(addresses[i], district);
+        // messages.push("Senate district: " + district);
+    }
+
+    console.log('Final Results:', results);
+
+}

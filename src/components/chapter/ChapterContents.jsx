@@ -12,6 +12,22 @@ export default function ChapterContents() {
     let bookId = params.bookId;
     let chapterId = params.chapterId;
 
+    // Determine if the user has access to the book and chapter.
+    let [hasAccess, setHasAccess] = useState(false); // Default to true for now.
+
+
+
+    useEffect(() => {
+
+        async function checkAccess() {
+            // Placeholder for access check logic.
+            // For now, we assume access is granted.
+            let hasAccess = await Promise.resolve(true);
+            setHasAccess(hasAccess);
+        }
+        checkAccess();
+    });
+
 
 
     useEffect(() => {
@@ -20,7 +36,7 @@ export default function ChapterContents() {
             setContent(resp);
         }
         fn();
-    }, [chapterId, bookId]);
+    }, [hasAccess, chapterId, bookId]);
 
 
 
