@@ -9,8 +9,8 @@ module.exports = env => {
 
     return {
         entry: {
-            app: path.resolve(__dirname, "./src/js/index.js")
-            // init_head: path.resolve(__dirname, "src/js/custom-elements.js")
+            app: path.resolve(__dirname, "./src/js/index.js"),
+            map: path.resolve(__dirname, "./src/js/map.js")
         },
         optimization: {
             splitChunks: {
@@ -99,7 +99,7 @@ module.exports = env => {
                 },
                 {
                     test: /\.html$/i,
-                    exclude: path.resolve(__dirname, "src/index.html"),
+                    exclude: [path.resolve(__dirname, "src/index.html"), path.resolve(__dirname, "src/map.html")],
                     loader: "asset/source"
                 }
             ]
@@ -112,6 +112,12 @@ module.exports = env => {
                 inject: "body",
                 filename: "index.html"
             }),
+            new HtmlWebpackPlugin({
+                template: path.resolve(__dirname, "./src/map.html"),
+                chunks: ["map"],
+                inject: "body",
+                filename: "map.html"
+            }),
             new CopyPlugin({
                 patterns: [
                     {
@@ -122,7 +128,6 @@ module.exports = env => {
                         from: path.resolve(__dirname, "data"),
                         to: path.resolve(__dirname, "dist/data")
                     },
-                    "src/map.html",
                     "src/.nojekyll",
                     "src/manifest.json",
                     "src/sw.js",
