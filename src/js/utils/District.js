@@ -21,7 +21,13 @@ export let districts = [];
 export default class District {
     constructor(coords) {
 
-    this.coords = coords;
+    this.coords = coords[0]; // Assuming coords is an array of arrays
+    }
+
+    // Convert coords to LatLng objects for Google Maps
+    getLatLngPath() {
+    // Convert [lng, lat] to {lat: lat, lng: lng}
+    return this.coords.map(p => ({ lat: p[1], lng: p[0]}));
     }
     // Returns the westernmost point of the district 
     getWesternMostPoint() {
@@ -50,6 +56,7 @@ export default class District {
     return southernMostPoint;
     }
 }
+
 
 export function isUrban(point) {
 
@@ -80,20 +87,27 @@ export function isEasternOregon(point) {
 }
 
 export function isSouthernOregon(point) {
-    return true;
+    let northernDistrict = districts[11]; // Example: District 12 is in Southern Oregon
+    let easternMostPoint = northernDistrict.getEasternMostPoint();
+
+    if (point.lat() < easternMostPoint[1]) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 // Determine starting quadrant based on address location
 export function getStartQuadrant(point)
 {
-    // TODO: Return array of district objects
-    if (isUrban(point)) {
-        return urban;
-    } else if (isEasternOregon(point)) {
-        return easternOregon;
-    } else {
-        return southernOregon;
-    }
+    // Determine which region the point is in
+    let nums;
+    // Return array of district numbers in that region
+    if (isEasternOregon(point)) nums = easternOregon;
+    else if (isSouthernOregon(point)) nums = southernOregon;
+    else nums = urban;
+    // Map district numbers to district objects
+    return nums.map(n => districts[n - 1]);
 }
 
 export function remainingDistricts(startQuadrant)

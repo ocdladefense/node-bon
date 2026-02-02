@@ -27,7 +27,6 @@ domReady(async function()
         event.preventDefault(); // Prevent form submission
         event.stopPropagation();
         let address = document.getElementById('address').value;
-        let district = document.getElementById('district').value;
         let resultDiv = document.getElementById('result');
         resultDiv.textContent = 'Checking...';
 
@@ -61,22 +60,30 @@ async function showDistrict(addressLatLng)
 {
     // Try quadrant first (optimization)
     let startQuadrant = getStartQuadrant(addressLatLng);
-    // Check districts in the starting quadrant first
+    // Log starting quadrant name for debugging
+    console.log('Determined starting quadrant with ' + startQuadrant.length + ' districts...');
+    // Check districts in the starting quadrant object first
     for (let district of startQuadrant) {
+        // Get district object number
+        let districtNum = districts.indexOf(district) + 1;
+        console.log('Checking district ' + districtNum + '...');
         // Check if address is in quadrant district
         if (await isLatLngInDistrict(addressLatLng, district)) {
-            return 'The address is inside House District ' + district + '.';
+            console.log('Address coordinates: ' + addressLatLng.lat() + ', ' + addressLatLng.lng());
+            return 'The address is inside House District ' + districtNum + '.';
         }
     }
 
     // If not found in quadrant, check array of districts
     const remainingDistrictsList = remainingDistricts(startQuadrant);
     // Check remaining districts
-    for (let district of remainingDistrictsList) {
-        console.log('Checking district ' + district + '...');
+    for (let districtNum of remainingDistrictsList) {
+        console.log('Checking district ' + districtNum + '...');
+        // Get the District object from the districts array (districtNum is 1-indexed)
+        let district = districts[districtNum - 1];
         // Check if address is in district
         if (await isLatLngInDistrict(addressLatLng, district)) {
-            return 'The address is inside House District ' + district + '.';
+            return 'The address is inside House District ' + districtNum + '.';
         }
     }
 
@@ -109,7 +116,7 @@ async function isLatLngInDistrict(addressLatLng, district)
 {
     try {
 
-        const kmlPolygon = new google.maps.Polygon({ paths: district.coords });
+        const kmlPolygon = new google.maps.Polygon({ paths: district.getLatLngPath() });
         // 4. Use containsLocation()
         const isInside = google.maps.geometry.poly.containsLocation(addressLatLng, kmlPolygon);
 
