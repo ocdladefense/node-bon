@@ -1,7 +1,7 @@
 {
-    "name": "myapp",
+    "name": "Books Online",
     "version": "0.1.0",
-    "description": "My app.",
+    "description": "Books Online application for managing and reading OCDLA publications.",
     "main": "index.js",
     "type": "module",
     "scripts": {

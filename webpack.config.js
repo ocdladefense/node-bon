@@ -106,7 +106,7 @@ export default env => {
                 },
                 {
                     test: /\.html$/i,
-                    exclude: [path.resolve(__dirname, "src/index.html"), path.resolve(__dirname, "src/map.html")],
+                    exclude: [path.resolve(__dirname, "src/pages/index.html"), path.resolve(__dirname, "src/pages/map.html")],
                     loader: "asset/source"
                 }
             ]
@@ -114,13 +114,13 @@ export default env => {
         plugins: [
             new Dotenv(),
             new HtmlWebpackPlugin({
-                template: path.resolve(__dirname, "./src/index.html"),
+                template: path.resolve(__dirname, "./src/pages/index.html"),
                 chunks: ["app"],
                 inject: "body",
                 filename: "index.html"
             }),
             new HtmlWebpackPlugin({
-                template: path.resolve(__dirname, "./src/map.html"),
+                template: path.resolve(__dirname, "./src/pages/map.html"),
                 chunks: ["map"],
                 inject: "body",
                 filename: "map.html"
