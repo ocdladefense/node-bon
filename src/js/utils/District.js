@@ -110,7 +110,13 @@ export function getStartQuadrant(point)
     return nums.map(n => districts[n - 1]);
 }
 
+// Get remaining districts not in starting quadrant
 export function remainingDistricts(startQuadrant)
 {
-    return urban.concat(southernOregon, easternOregon).filter(d => !startQuadrant.includes(d));
+    // Get district numbers in starting quadrant
+    let startDistrictNums = startQuadrant.map(d => districts.indexOf(d) + 1);
+    // Get all district numbers
+    let allDistrictNums = districts.map((d, i) => i + 1);
+    // Return district numbers not in starting quadrant
+    return allDistrictNums.filter(n => !startDistrictNums.includes(n));
 }

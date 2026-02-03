@@ -67,24 +67,26 @@ async function showDistrict(addressLatLng)
         // Get district object number
         let districtNum = districts.indexOf(district) + 1;
         console.log('Checking district ' + districtNum + '...');
-        // Check if address is in quadrant district
-        if (await isLatLngInDistrict(addressLatLng, district)) {
-            console.log('Address coordinates: ' + addressLatLng.lat() + ', ' + addressLatLng.lng());
-            return 'The address is inside House District ' + districtNum + '.';
+        // Check if address is outside district for quick elimination
+        if (!await isLatLngInDistrict(addressLatLng, district)) {
+            continue;
         }
+        return 'The address is inside House District ' + districtNum + '.';
     }
 
     // If not found in quadrant, check array of districts
     const remainingDistrictsList = remainingDistricts(startQuadrant);
+    console.log('Checking remaining ' + remainingDistrictsList.length + ' districts...');
     // Check remaining districts
     for (let districtNum of remainingDistrictsList) {
         console.log('Checking district ' + districtNum + '...');
         // Get the District object from the districts array (districtNum is 1-indexed)
         let district = districts[districtNum - 1];
         // Check if address is in district
-        if (await isLatLngInDistrict(addressLatLng, district)) {
-            return 'The address is inside House District ' + districtNum + '.';
+        if (!await isLatLngInDistrict(addressLatLng, district)) {
+            continue;
         }
+        return 'The address is inside House District ' + districtNum + '.';
     }
 
     return 'Address could not be matched to any Oregon House District. Please verify the address is in Oregon.';
