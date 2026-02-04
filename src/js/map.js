@@ -60,18 +60,24 @@ async function showDistrict(addressLatLng)
 {
     // Try quadrant first (optimization)
     let startQuadrant = getStartQuadrant(addressLatLng);
+    const addressLat = addressLatLng.lat();
+    const addressLng = addressLatLng.lng();
     // Log starting quadrant name for debugging
     console.log('Determined starting quadrant with ' + startQuadrant.length + ' districts...');
     // Check districts in the starting quadrant object first
     for (let district of startQuadrant) {
         // Get district object number
+        // PSUDO: if district.isOutside(addressLatLng) continue;
         let districtNum = districts.indexOf(district) + 1;
         console.log('Checking district ' + districtNum + '...');
         // Check if address is outside district for quick elimination
-        if (!await isLatLngInDistrict(addressLatLng, district)) {
+        if (district.isOutside(addressLat, addressLng)) {
             continue;
         }
-        return 'The address is inside House District ' + districtNum + '.';
+        // If not outside, do full check
+        if (isLatLngInDistrict(addressLatLng, district)) {
+            return 'The address is inside House District ' + districtNum + '.';
+        }
     }
 
     // If not found in quadrant, check array of districts
@@ -83,10 +89,13 @@ async function showDistrict(addressLatLng)
         // Get the District object from the districts array (districtNum is 1-indexed)
         let district = districts[districtNum - 1];
         // Check if address is in district
-        if (!await isLatLngInDistrict(addressLatLng, district)) {
+        if (district.isOutside(addressLat, addressLng)) {
             continue;
         }
-        return 'The address is inside House District ' + districtNum + '.';
+        // If not outside, do full check
+        if (isLatLngInDistrict(addressLatLng, district)) {
+            return 'The address is inside House District ' + districtNum + '.';
+        }
     }
 
     return 'Address could not be matched to any Oregon House District. Please verify the address is in Oregon.';
@@ -114,7 +123,7 @@ async function geocodeAddress(address)
 
 
 // Main function to check if address is inside polygon
-async function isLatLngInDistrict(addressLatLng, district)
+function isLatLngInDistrict(addressLatLng, district)
 {
     try {
 
