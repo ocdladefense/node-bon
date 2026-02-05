@@ -30,26 +30,41 @@ domReady(async function()
         let resultDiv = document.getElementById('result');
         resultDiv.textContent = 'Checking...';
 
+        // Address can take multiple addresses separated by new lines
+        let addresses = address.split('\n').map(a => a.trim()).filter(a => a.length > 0);
 
-        // Geocode right away so we can determine which quadrant to start the district search in.
-        const addressLatLng = await geocodeAddress(address);
+        let results = [];
 
+        // Process each address sequentially
+        for (let i = 0; i < addresses.length; i++) {
+            resultDiv.textContent = `Checking address ${i + 1} of ${addresses.length}...`;
+
+            try {
+                // Geocode the address
+                const addressLatLng = await geocodeAddress(addresses[i]);
+
+                // Find which district the address is in
+                let statusMessage = await showDistrict(addressLatLng);
+                results.push({
+                    address: addresses[i],
+                    result: statusMessage
+                });
+            } catch (error) {
+                results.push({
+                    address: addresses[i],
+                    result: error
+                });
+            }
+        }
+
+        // Display all results
+        resultDiv.innerHTML = results.map(r => `<strong>${r.address}:</strong> ${r.result}`).join('<br><br>');
 
         // Divide and conquer here.
         // Divide the state into three quadrants.
         // Based on latitude and longitude of the address,
         // determine which quadrant it falls into,
         // then only load and check the KML polygon for that quadrant.
-
-        let statusMessage = "";
-
-
-            // Find which district the address is in
-            statusMessage = await showDistrict(addressLatLng);
-        
-
-        resultDiv.textContent = statusMessage;
-
     });
 });
 
