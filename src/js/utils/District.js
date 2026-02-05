@@ -15,68 +15,88 @@ export let districts = [];
 
 
 export default class District {
-    constructor(coords) {
-        this.coords = coords[0]; // Assuming coords is an array of arrays
+
+    // District number (1-60)
+    id;
+
+    westPoint;
+    eastPoint;
+    southPoint;
+    northPoint;
+
+
+
+
+    constructor(coords, id) {
+        this.id = id;
+        this.coords = coords[0]; // In Oregon district boundaries are contiguous, so we can use the first set of coordinates for the main polygon. If there were multiple polygons (e.g., islands), we would need to check all of them. 
         // Precalculate bounding box points for performance
-        let westernMostPoint = this.coords[0];
-        let easternMostPoint = this.coords[0];
-        let southernMostPoint = this.coords[0];
-        let northernMostPoint = this.coords[0];
-        // Find bounding box
-        for (let i = 1; i < this.coords.length; i++) {
-            const point = this.coords[i];
-            if (point[0] < westernMostPoint[0]) westernMostPoint = point;
-            if (point[0] > easternMostPoint[0]) easternMostPoint = point;
-            if (point[1] < southernMostPoint[1]) southernMostPoint = point;
-            if (point[1] > northernMostPoint[1]) northernMostPoint = point;
-        }
-        // Store bounding box points
-        this.westernMostPoint = westernMostPoint;
-        this.easternMostPoint = easternMostPoint;
-        this.southernMostPoint = southernMostPoint;
-        this.northernMostPoint = northernMostPoint;
-        console.log('District bounding box: W:' + westernMostPoint + ' E:' + easternMostPoint + ' S:' + southernMostPoint + ' N:' + northernMostPoint);
+        this.westPoint = District.getWesternMostPoint(this.coords);
+        this.eastPoint = District.getEasternMostPoint(this.coords);
+        this.southPoint = District.getSouthernMostPoint(this.coords);
+        this.northPoint = District.getNorthernMostPoint(this.coords);
+
+
+        console.log('District bounding box: W:' + this.westPoint + ' E:' + this.eastPoint + ' S:' + this.southPoint + ' N:' + this.northPoint);
     }
 
     // Convert coords to LatLng objects for Google Maps
-    getLatLngPath() {
+    getAsGoogleMapCoords() {
         // Convert [lng, lat] to {lat: lat, lng: lng}
         return this.coords.map(p => ({ lat: p[1], lng: p[0] }));
     }
+
+
     // Returns the westernmost point of the district 
-    static getWesternMostPoint(district) {
+    static getWesternMostPoint(coords) {
         // Get western most longitude point
-        return district.westernMostPoint;
+        // return district.westernMostPoint;
+
+        // Get western most longitude point
+        const westernMostPoint = coords.reduce((westernPoint, currentPoint) => {
+            let lng1 = westernPoint[0];
+            let lng2 = currentPoint[0];
+            return lng1 < lng2 ? westernPoint : currentPoint;
+        });
+
+        return westernMostPoint;
     }
 
-    static getEasternMostPoint(district) {
+    static getEasternMostPoint(coords) {
         // Get eastern most longitude point
-        return district.easternMostPoint;
+        const easternMostPoint = coords.reduce((easternPoint, currentPoint) => {
+            return currentPoint[0] > easternPoint[0] ? currentPoint : easternPoint;
+        });
+        return easternMostPoint;
     }
 
-    static getSouthernMostPoint(district) {
-        // Get southern most latitude point
-        return district.southernMostPoint;
+    static getSouthernMostPoint(coords) {
+        const southernMostPoint = coords.reduce((southernPoint, currentPoint) => {
+            return currentPoint[1] < southernPoint[1] ? currentPoint : southernPoint;
+        });
+        return southernMostPoint;
     }
 
-    static getNorthernMostPoint(district) {
-        return district.northernMostPoint;
+    static getNorthernMostPoint(coords) {
+        const northernMostPoint = coords.reduce((northernPoint, currentPoint) => {
+            return currentPoint[1] > northernPoint[1] ? currentPoint : northernPoint;
+        });
+        return northernMostPoint;
     }
 
-    isOutside(lat, lng) {
-        // Quick check using bounding box
-        const westernMostPoint = District.getWesternMostPoint(this);
-        const easternMostPoint = District.getEasternMostPoint(this);
-        const southernMostPoint = District.getSouthernMostPoint(this);
-        const northernMostPoint = District.getNorthernMostPoint(this);
-        if (lng < westernMostPoint[0] || lng > easternMostPoint[0] ||
-            lat < southernMostPoint[1] || lat > northernMostPoint[1]) {
-            return true;
-        } else {
-            return false;
-        }
+
+
+    isOutside(coords) {
+
+        let lat = coords[1];
+        let lng = coords[0];
+
+        // If the point if north of the northernmost point or south of the southernmost point,
+        // it can't be within this district.
+        return lat > this.northPoint[1] || lat < this.southPoint[1] || lng < this.westPoint[0] || lng > this.eastPoint[0];
     }
 }
+
 
 
 function isUrban(point) {

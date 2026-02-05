@@ -1,27 +1,38 @@
 import { getStartQuadrant, districts, remainingDistricts } from './utils/District.js';
 import District from './utils/District.js';
-function domReady(cb)
-{
+
+
+function domReady(cb) {
     document.readyState === 'interactive' || document.readyState === 'complete'
         ? cb()
         : document.addEventListener('DOMContentLoaded', cb);
 }
 
-domReady(async function()
-{
+
+
+async function loadDistricts() {
     // Get all districts data
     let data = await fetch('/data/geo/House_Districts.geojson').then(response => response.json());
     let features = data.features;
-    for (let i = 1; i <= 60; i++) {
+    for (let i = 1; i <= 60; i++)
+
+        {
+
         let districtCoords = features[i - 1].geometry.coordinates;
-        let district = new District(districtCoords);
+        let district = new District(districtCoords, i);
         districts.push(district);
         console.log('Loaded district ' + i);
     }
-    
+}
+
+domReady(async function() {
+
+    // Load up all of the district data so we don't have to "wait" on submission.
+    // This is perceived efficiency - the user will experience a delay on page load, but then no delay when they submit the form. If we waited to load until form submission, the user would experience a delay after submission, which is worse UX.
+    await loadDistricts();
+
     let form = document.getElementById('district-lookup');
-    form.addEventListener('submit', async function(event)
-    {
+    form.addEventListener('submit', async function(event) {
 
         let action = event.submitter.id;
         event.preventDefault(); // Prevent form submission
@@ -33,32 +44,34 @@ domReady(async function()
         // Address can take multiple addresses separated by new lines
         let addresses = address.split('\n').map(a => a.trim()).filter(a => a.length > 0);
 
-        let results = [];
+        // Batch geocode all addresses into points.
+        const points = await Promise.all(addresses.map(async (address) => await geocodeAddress(address)));
 
+        // Batch all points into their districts.
+        let results = await Promise.all(points.map(async (addressLatLng) => await showDistrict(addressLatLng)));
+
+
+        /*
         // Process each address sequentially
-        for (let i = 0; i < addresses.length; i++) {
+        for (let i = 0; i < addresses.length; i++)
+        {
             resultDiv.textContent = `Checking address ${i + 1} of ${addresses.length}...`;
 
-            try {
-                // Geocode the address
-                const addressLatLng = await geocodeAddress(addresses[i]);
+            // Geocode the address
+            const addressLatLng = await geocodeAddress(addresses[i]);
 
-                // Find which district the address is in
-                let statusMessage = await showDistrict(addressLatLng);
-                results.push({
-                    address: addresses[i],
-                    result: statusMessage
-                });
-            } catch (error) {
-                results.push({
-                    address: addresses[i],
-                    result: error
-                });
-            }
+            // Find which district the address is in
+            let statusMessage = await showDistrict(addressLatLng);
+            results.push({
+                address: addresses[i],
+                result: statusMessage
+            });
+
         }
+            */
 
         // Display all results
-        resultDiv.innerHTML = results.map(r => `<strong>${r.address}:</strong> ${r.result}`).join('<br><br>');
+        resultDiv.innerHTML = results.map(district => !district ? "Not found" : "District " + district.id).join('<br />');//results.map(r => `<strong>${r.address}:</strong> ${r.result}`).join('<br><br>');
 
         // Divide and conquer here.
         // Divide the state into three quadrants.
@@ -71,33 +84,36 @@ domReady(async function()
 
 
 // User wants to find which district the address is in.
-async function showDistrict(addressLatLng)
-{
+async function showDistrict(addressLatLng) {
     // Try quadrant first (optimization)
-    let startQuadrant = getStartQuadrant(addressLatLng);
+    // let startQuadrant = getStartQuadrant(addressLatLng);
     const addressLat = addressLatLng.lat();
     const addressLng = addressLatLng.lng();
     // Log starting quadrant name for debugging
-    console.log('Determined starting quadrant with ' + startQuadrant.length + ' districts...');
-    // Check districts in the starting quadrant object first
-    for (let district of startQuadrant) {
-        // Get district object number
-        // PSUDO: if district.isOutside(addressLatLng) continue;
-        let districtNum = districts.indexOf(district) + 1;
-        console.log('Checking district ' + districtNum + '...');
-        // Check if address is outside district for quick elimination
-        if (district.isOutside(addressLat, addressLng)) {
-            continue;
-        }
-        // If not outside, do full check
-        if (isLatLngInDistrict(addressLatLng, district)) {
-            return 'The address is inside House District ' + districtNum + '.';
+    // console.log('Determined starting quadrant with ' + startQuadrant.length + ' districts...');
+
+
+
+    let possibles = districts.filter(d => !d.isOutside([addressLng, addressLat]));
+
+
+    for (let district of possibles)
+    {
+        console.log('Checking district ' + (districts.indexOf(district) + 1) + '...');
+        if (isLatLngInDistrict(addressLatLng, district))
+        {
+            return district;
         }
     }
 
+
     // If not found in quadrant, check array of districts
-    const remainingDistrictsList = remainingDistricts(startQuadrant);
-    console.log('Checking remaining ' + remainingDistrictsList.length + ' districts...');
+    // const remainingDistrictsList = remainingDistricts(startQuadrant);
+    // console.log('Checking remaining ' + remainingDistrictsList.length + ' districts...');
+
+
+
+    /*
     // Check remaining districts
     for (let districtNum of remainingDistrictsList) {
         console.log('Checking district ' + districtNum + '...');
@@ -112,22 +128,22 @@ async function showDistrict(addressLatLng)
             return 'The address is inside House District ' + districtNum + '.';
         }
     }
+        */
 
-    return 'Address could not be matched to any Oregon House District. Please verify the address is in Oregon.';
+    return null;
 }
 
 
 // 1. Geocode the Address (assuming you have a geocoding service or API call)
-async function geocodeAddress(address)
-{
+async function geocodeAddress(address) {
     const geocoder = new google.maps.Geocoder();
-    return await new Promise((resolve, reject) =>
-    {
-        geocoder.geocode({ 'address': address }, (results, status) =>
-        {
-            if (status === 'OK') {
+    return await new Promise((resolve, reject) => {
+        geocoder.geocode({ 'address': address }, (results, status) => {
+            if (status === 'OK')
+            {
                 resolve(results[0].geometry.location); // Returns LatLng object
-            } else {
+            } else
+            {
                 reject('Geocode was not successful for the following reason: ' + status);
             }
         });
@@ -138,16 +154,15 @@ async function geocodeAddress(address)
 
 
 // Main function to check if address is inside polygon
-function isLatLngInDistrict(addressLatLng, district)
-{
-    try {
+function isLatLngInDistrict(addressLatLng, district) {
+    try
+    {
 
-        const kmlPolygon = new google.maps.Polygon({ paths: district.getLatLngPath() });
+        const kmlPolygon = new google.maps.Polygon({ paths: district.getAsGoogleMapCoords() });
         // 4. Use containsLocation()
-        const isInside = google.maps.geometry.poly.containsLocation(addressLatLng, kmlPolygon);
-
-        return isInside;
-    } catch (error) {
+        return google.maps.geometry.poly.containsLocation(addressLatLng, kmlPolygon);
+    } catch (error)
+    {
         console.error('Error:', error);
         return false;
     }
