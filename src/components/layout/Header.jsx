@@ -29,17 +29,8 @@ export default function Header({ loggedIn = false }) {
         // loggedIn: loggedIn
     };
 
-    if (loggedIn)
-    {
-        console.log("User is logged in");
-        items.push(logoutItem);
-    } else
-    {
-        console.log("User is NOT logged in");
-        items.push(loginItem);
-    }
+    items.push(loggedIn ? logoutItem : loginItem);
 
-    // 
 
     return (
         <header className="w-full mb-0 py-1 sticky top-0 z-50 bg-white">

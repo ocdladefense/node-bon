@@ -66,7 +66,7 @@ export default function App() {
 
     return (
         <div className="tablet:container mx-auto">
-            <Header loggedIn={isLoggedIn} />
+            <Header loggedIn={isLoggedIn()} />
             <div className="mx-auto pt-4">
                 {!appReady ? <h1>Loading...</h1> : <Outlet context={{ client, isLoggedIn: isLoggedIn() }} />}
             </div>
