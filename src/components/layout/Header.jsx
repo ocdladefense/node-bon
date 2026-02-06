@@ -13,11 +13,6 @@ export default function Header({ loggedIn = false }) {
             url: "/",
             label: "home"
         },
-        {
-            url: "/settings",
-            label: "settings",
-            hidden: true
-        }
     ];
 
     let loginItem = {
@@ -34,10 +29,12 @@ export default function Header({ loggedIn = false }) {
         // loggedIn: loggedIn
     };
 
-    if (loggedIn) {
+    if (loggedIn)
+    {
         console.log("User is logged in");
         items.push(logoutItem);
-    } else {
+    } else
+    {
         console.log("User is NOT logged in");
         items.push(loginItem);
     }
