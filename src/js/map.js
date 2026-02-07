@@ -2,7 +2,6 @@ import { getStartQuadrant, districts, remainingDistricts } from './utils/Distric
 import District from './utils/District.js';
 
 // Global map and polygon variables
-let map;
 let currentPolygons = [];
 let currentMarkers = [];
 
@@ -10,23 +9,6 @@ function domReady(cb) {
     document.readyState === 'interactive' || document.readyState === 'complete'
         ? cb()
         : document.addEventListener('DOMContentLoaded', cb);
-}
-
-async function showMap(addressLatLng) {
-    // Initialize the map
-    const mapEl = document.getElementById('map');
-    if (!mapEl)
-    {
-        return null;
-    }
-    // Center the map on the address if provided, otherwise center on Oregon
-    map = new google.maps.Map(mapEl, {
-        zoom: 6,
-        center: addressLatLng || { lat: 43.9336, lng: -120.5583 },
-        mapTypeId: 'roadmap'
-    });
-    
-    return map;
 }
 
 async function loadDistricts() {
@@ -79,7 +61,6 @@ domReady(async function() {
     // Load up all of the district data so we don't have to "wait" on submission.
     // This is perceived efficiency - the user will experience a delay on page load, but then no delay when they submit the form. If we waited to load until form submission, the user would experience a delay after submission, which is worse UX.
     await loadDistricts();
-    await showMap();
     await loadRepresentatives();
     await loadSenators();
 
@@ -119,6 +100,7 @@ domReady(async function() {
         });
 
         // Render results
+        
         if (Object.keys(districtCounts).length > 0) {
             resultDiv.innerHTML = Object.entries(districtCounts).map(([districtId, count]) => {
                 return 'District ' + districtId + (count > 1 ? ' (' + count + ' addresses)' : '');
@@ -132,7 +114,15 @@ domReady(async function() {
             });
         } else {
             resultDiv.textContent = "Not found";
-        }
+        }/* 
+       // Render results
+       resultDiv.innerHTML = results.map(district => !district ? "Not found" : "District " + district.id).join('<br />');
+            // Draw the district(s) on the map
+            results.forEach((district, index) => {
+                if (district) {
+                    drawDistrictOnMap(district, points[index]);
+                }
+            }); */
     });
 });
 
@@ -140,10 +130,9 @@ domReady(async function() {
 function drawDistrictOnMap(district, addressLatLng) {
     if (!map || !district) return;
 
-    // Create and draw the polygon
+    // Create and draw the polygon once per district, not once per address in the district
     const polygon = new google.maps.Polygon({
         paths: district.getAsGoogleMapCoords(),
-        map: map,
         fillColor: '#2b6cb0',
         fillOpacity: 0.35,
         strokeColor: '#2b6cb0',
@@ -151,6 +140,7 @@ function drawDistrictOnMap(district, addressLatLng) {
         strokeWeight: 2,
         clickable: true
     });
+    polygon.setMap(map);
     currentPolygons.push(polygon);
 
     const infoWindow = new google.maps.InfoWindow({
@@ -171,7 +161,7 @@ function drawDistrictOnMap(district, addressLatLng) {
     const marker = new google.maps.Marker({
         position: addressLatLng,
         map: map,
-        title: 'Address Location'
+        title: addressLatLng ? addressLatLng.toUrlValue() : ''
     });
     currentMarkers.push(marker);
 

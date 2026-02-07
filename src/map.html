@@ -126,15 +126,19 @@
 
         async function initMap()
         {
-            // The location of Uluru
-            const position = { lat: -25.344, lng: 131.031 };
             // Request needed libraries.
             //@ts-ignore
-            // const { Map } = await google.maps.importLibrary("maps");
-            // const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+            const { Map } = await google.maps.importLibrary("maps");
+            const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
             await google.maps.importLibrary("geometry");
             await google.maps.importLibrary("geocoding");
 
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 6,
+                center: { lat: 43.9336, lng: -120.5583 },
+            });
+            // The location of Oregon
+            const position = { lat: 43.9336, lng: -120.5583 };
         }
 
 
