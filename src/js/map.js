@@ -1,6 +1,10 @@
 import { getStartQuadrant, districts, remainingDistricts } from './utils/District.js';
 import District from './utils/District.js';
 
+// Global map and polygon variables
+let map;
+let currentPolygons = [];
+let currentMarkers = [];
 
 function domReady(cb) {
     document.readyState === 'interactive' || document.readyState === 'complete'
@@ -8,7 +12,22 @@ function domReady(cb) {
         : document.addEventListener('DOMContentLoaded', cb);
 }
 
-
+async function showMap(addressLatLng) {
+    // Initialize the map
+    const mapEl = document.getElementById('map');
+    if (!mapEl)
+    {
+        return null;
+    }
+    // Center the map on the address if provided, otherwise center on Oregon
+    map = new google.maps.Map(mapEl, {
+        zoom: 6,
+        center: addressLatLng || { lat: 43.9336, lng: -120.5583 },
+        mapTypeId: 'roadmap'
+    });
+    
+    return map;
+}
 
 async function loadDistricts() {
     // Get all districts data
@@ -25,11 +44,44 @@ async function loadDistricts() {
     }
 }
 
+async function loadRepresentatives() {
+    // Get all representatives data
+    let data = await fetch('/data/geo/representatives.json').then(response => response.json());
+    // Process representatives data as needed (e.g., store in a variable, display on the page, etc.)
+    // pair representatives with their districts for easy lookup when displaying results
+    data.forEach(rep => {
+        let districtNum = rep.DistrictNumber;
+        if (districtNum >= 1 && districtNum <= 60) {
+            let district = districts[districtNum - 1]; // Get the District object (districtNum is 1-indexed)
+            district.representative = rep; // Add representative info to the District object
+        }
+    });
+    console.log('Loaded representatives data');
+}
+
+async function loadSenators() {
+    // Get all senators data
+    let data = await fetch('/data/geo/senators.json').then(response => response.json());
+    // Process senators data as needed (e.g., store in a variable, display on the page, etc.)
+    // pair senators with their districts for easy lookup when displaying results
+    data.forEach(senator => {
+        let districtNum = senator.DistrictNumber;
+        if (districtNum >= 1 && districtNum <= 30) {
+            let district = districts[districtNum - 1]; // Get the District object (districtNum is 1-indexed)
+            district.senator = senator; // Add senator info to the District object
+        }
+    });
+    console.log('Loaded senators data');
+}
+
 domReady(async function() {
 
     // Load up all of the district data so we don't have to "wait" on submission.
     // This is perceived efficiency - the user will experience a delay on page load, but then no delay when they submit the form. If we waited to load until form submission, the user would experience a delay after submission, which is worse UX.
     await loadDistricts();
+    await showMap();
+    await loadRepresentatives();
+    await loadSenators();
 
     let form = document.getElementById('district-lookup');
     form.addEventListener('submit', async function(event) {
@@ -41,6 +93,14 @@ domReady(async function() {
         let resultDiv = document.getElementById('result');
         resultDiv.textContent = 'Checking...';
 
+        // Clear previous polygons
+        currentPolygons.forEach(polygon => polygon.setMap(null));
+        currentPolygons = [];
+
+        // Remove previous marker(s) after new search
+        currentMarkers.forEach(marker => marker.setMap(null));
+        currentMarkers = [];
+
         // Address can take multiple addresses separated by new lines
         let addresses = address.split('\n').map(a => a.trim()).filter(a => a.length > 0);
 
@@ -50,13 +110,84 @@ domReady(async function() {
         // Batch all points into their districts.
         let results = points.map((addressLatLng) => showDistrict(addressLatLng));
 
+        // If more than one address is in a district display district only once with the number of addresses in parentheses. If only one address is in a district, display as normal. 
+        // If no addresses are found in any district, display "Not found"
+        let districtCounts = {};
+        results.forEach(district => {
+            if (!district) return;
+            districtCounts[district.id] = (districtCounts[district.id] || 0) + 1;
+        });
 
-        // Display all results
-        resultDiv.innerHTML = results.map(district => !district ? "Not found" : "District " + district.id).join('<br />');//results.map(r => `<strong>${r.
+        // Render results
+        if (Object.keys(districtCounts).length > 0) {
+            resultDiv.innerHTML = Object.entries(districtCounts).map(([districtId, count]) => {
+                return 'District ' + districtId + (count > 1 ? ' (' + count + ' addresses)' : '');
+            }).join('<br />');
+
+            // Draw the district(s) on the map
+            Object.keys(districtCounts).forEach(districtId => {
+                let district = districts[districtId - 1];
+                let addressLatLng = points[results.findIndex(d => d && d.id === parseInt(districtId))];
+                drawDistrictOnMap(district, addressLatLng);
+            });
+        } else {
+            resultDiv.textContent = "Not found";
+        }
     });
 });
 
+// Function to draw district on map
+function drawDistrictOnMap(district, addressLatLng) {
+    if (!map || !district) return;
 
+    // Create and draw the polygon
+    const polygon = new google.maps.Polygon({
+        paths: district.getAsGoogleMapCoords(),
+        map: map,
+        fillColor: '#2b6cb0',
+        fillOpacity: 0.35,
+        strokeColor: '#2b6cb0',
+        strokeOpacity: 1,
+        strokeWeight: 2,
+        clickable: true
+    });
+    currentPolygons.push(polygon);
+
+    const infoWindow = new google.maps.InfoWindow({
+        content: 'Loading...'
+    });
+
+    // add click listener to polygon to show representative and senator info
+    google.maps.event.addListener(polygon, 'click', () => {
+        // Set the content of the info window to the representative and senator info
+        infoWindow.setContent('<div><strong>District ' + district.id + '</strong><br>' + (district.representative ? '<b>Representative: </b>' + district.representative.FirstName + ' ' + district.representative.LastName + ' ' + '<br>' + district.representative.Party + ' ' + '<br>' + district.representative.EmailAddress + '<br>' : '') + (district.senator ? '<b>Senator: </b>' + district.senator.FirstName + ' ' + district.senator.LastName + ' ' + '<br>' + district.senator.Party + ' ' + '<br>' + district.senator.EmailAddress + '<br>' : '') + '</div>');
+        // Position the info window at the clicked location
+        infoWindow.setPosition(addressLatLng);
+        // Open the info window at the clicked location
+        infoWindow.open(map, polygon);
+    });
+
+    // Add a marker at the address location
+    const marker = new google.maps.Marker({
+        position: addressLatLng,
+        map: map,
+        title: 'Address Location'
+    });
+    currentMarkers.push(marker);
+
+    // Calculate bounds for the district
+    const bounds = new google.maps.LatLngBounds();
+    district.getAsGoogleMapCoords().forEach(coord => {
+        bounds.extend(coord);
+    });
+
+    // Fit map to district bounds
+    map.fitBounds(bounds);
+    console.log('Representative of District ' + district.id + ': ' + district.representative.FirstName + ' ' + district.representative.LastName);
+    if (district.senator) {
+        console.log('Senator of District ' + district.id + ': ' + district.senator.FirstName + ' ' + district.senator.LastName);
+    }
+}
 
 // User wants to find which district the address is in.
 function showDistrict(addressLatLng) {
