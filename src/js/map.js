@@ -58,11 +58,33 @@ async function loadSenators() {
 
 domReady(async function() {
 
+    // Wait for Google Maps to be ready
+    await new Promise((resolve) => {
+        if (window.google && window.google.maps) {
+            resolve();
+        } else {
+            window.initMapReady = resolve;
+        }
+    });
+
+    // Wait a bit more to ensure geometry library is fully loaded
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Verify geometry library is loaded
+    if (!window.google?.maps?.geometry?.poly) {
+        console.error('Google Maps geometry library not loaded');
+        await google.maps.importLibrary("geometry");
+    }
+
+    // Initialize the map first
+    await initMap();
+    
     // Load up all of the district data so we don't have to "wait" on submission.
     // This is perceived efficiency - the user will experience a delay on page load, but then no delay when they submit the form. If we waited to load until form submission, the user would experience a delay after submission, which is worse UX.
     await loadDistricts();
     await loadRepresentatives();
     await loadSenators();
+    await outlineAllDistrictBoundaries();
 
     let form = document.getElementById('district-lookup');
     form.addEventListener('submit', async function(event) {
@@ -91,46 +113,61 @@ domReady(async function() {
         // Batch all points into their districts.
         let results = points.map((addressLatLng) => showDistrict(addressLatLng));
 
-        // If more than one address is in a district display district only once with the number of addresses in parentheses. If only one address is in a district, display as normal. 
-        // If no addresses are found in any district, display "Not found"
-        let districtCounts = {};
-        results.forEach(district => {
+        // Track unique districts and their associated addresses
+        let districtAddresses = {};
+        results.forEach((district, index) => {
             if (!district) return;
-            districtCounts[district.id] = (districtCounts[district.id] || 0) + 1;
+            if (!districtAddresses[district.id]) {
+                districtAddresses[district.id] = [];
+            }
+            districtAddresses[district.id].push(points[index]);
         });
 
         // Render results
-        
-        if (Object.keys(districtCounts).length > 0) {
-            resultDiv.innerHTML = Object.entries(districtCounts).map(([districtId, count]) => {
-                return 'District ' + districtId + (count > 1 ? ' (' + count + ' addresses)' : '');
+        if (Object.keys(districtAddresses).length > 0) {
+            resultDiv.innerHTML = Object.entries(districtAddresses).map(([districtId, addressPoints]) => {
+                return 'District ' + districtId + (addressPoints.length > 1 ? ' (' + addressPoints.length + ' addresses)' : '');
             }).join('<br />');
 
-            // Draw the district(s) on the map
-            Object.keys(districtCounts).forEach(districtId => {
+            // Draw each district only once, but mark all addresses
+            for (let [districtId, addressPoints] of Object.entries(districtAddresses)) {
                 let district = districts[districtId - 1];
-                let addressLatLng = points[results.findIndex(d => d && d.id === parseInt(districtId))];
-                drawDistrictOnMap(district, addressLatLng);
-            });
+                await drawDistrictOnMap(district, addressPoints);
+            }
         } else {
             resultDiv.textContent = "Not found";
-        }/* 
-       // Render results
-       resultDiv.innerHTML = results.map(district => !district ? "Not found" : "District " + district.id).join('<br />');
-            // Draw the district(s) on the map
-            results.forEach((district, index) => {
-                if (district) {
-                    drawDistrictOnMap(district, points[index]);
-                }
-            }); */
+        }
     });
 });
 
-// Function to draw district on map
-function drawDistrictOnMap(district, addressLatLng) {
+// Function to outline all district border only
+async function outlineAllDistrictBoundaries() {
+    // Draw each district polygon perimiter
+    for (let district of districts) {
+        const polygon = new google.maps.Polygon({
+            paths: district.getAsGoogleMapCoords(),
+            fillColor: '#2b6cb0',
+            fillOpacity: 0.0, // No fill, just border
+            strokeColor: '#2b6cb0',
+            strokeOpacity: 1,
+            strokeWeight: 2,
+            clickable: false // No click events for the full map view
+        });
+        polygon.setMap(map);
+        currentPolygons.push(polygon);
+    }
+}
+
+// Function to draw district on map (once) and mark all addresses in it
+async function drawDistrictOnMap(district, addressLatLngs) {
     if (!map || !district) return;
 
-    // Create and draw the polygon once per district, not once per address in the district
+    // keep district boundaries visible when drawing polygon for address inside district
+    await outlineAllDistrictBoundaries();
+    // Ensure addressLatLngs is an array
+    const addresses = Array.isArray(addressLatLngs) ? addressLatLngs : [addressLatLngs];
+
+    // Create and draw the polygon ONCE per district
     const polygon = new google.maps.Polygon({
         paths: district.getAsGoogleMapCoords(),
         fillColor: '#2b6cb0',
@@ -148,35 +185,42 @@ function drawDistrictOnMap(district, addressLatLng) {
     });
 
     // add click listener to polygon to show representative and senator info
-    google.maps.event.addListener(polygon, 'click', () => {
-        // Set the content of the info window to the representative and senator info
-        infoWindow.setContent('<div><strong>District ' + district.id + '</strong><br>' + (district.representative ? '<b>Representative: </b>' + district.representative.FirstName + ' ' + district.representative.LastName + ' ' + '<br>' + district.representative.Party + ' ' + '<br>' + district.representative.EmailAddress + '<br>' : '') + (district.senator ? '<b>Senator: </b>' + district.senator.FirstName + ' ' + district.senator.LastName + ' ' + '<br>' + district.senator.Party + ' ' + '<br>' + district.senator.EmailAddress + '<br>' : '') + '</div>');
-        // Position the info window at the clicked location
-        infoWindow.setPosition(addressLatLng);
-        // Open the info window at the clicked location
-        infoWindow.open(map, polygon);
+    google.maps.event.addListener(polygon, 'click', async () => {
+        // Get all addresses in this district for display
+        const addressList = await Promise.all(addresses.map(async (addr) => 
+            await reverseGeocodeLatLng(addr.lat(), addr.lng())
+        ));
+        
+        infoWindow.setContent(
+            '<div><strong>District ' + district.id + '</strong><br>' +
+            '<b>Address(es):</b><br>' + addressList.join('<br>') + '<br><br>' +
+            (district.representative ? '<b>Representative: </b>' + district.representative.FirstName + ' ' + district.representative.LastName + '<br>' + district.representative.Party + '<br>' + district.representative.EmailAddress + '<br>' : '') +
+            (district.senator ? '<b>Senator: </b>' + district.senator.FirstName + ' ' + district.senator.LastName + '<br>' + district.senator.Party + '<br>' + district.senator.EmailAddress + '<br>' : '') +
+            '</div>'
+        );
+        infoWindow.setPosition(addresses[0]);
+        infoWindow.open(map);
     });
 
-    // Add a marker at the address location
-    const marker = new google.maps.Marker({
-        position: addressLatLng,
-        map: map,
-        title: addressLatLng ? addressLatLng.toUrlValue() : ''
-    });
-    currentMarkers.push(marker);
-
+    // Add a marker for EACH address in the district
+    for (let addressLatLng of addresses) {
+        const marker = new google.maps.Marker({
+            position: addressLatLng,
+            map: map,
+            title: await reverseGeocodeLatLng(addressLatLng.lat(), addressLatLng.lng())
+        });
+        currentMarkers.push(marker);
+    }
+    /*
     // Calculate bounds for the district
     const bounds = new google.maps.LatLngBounds();
     district.getAsGoogleMapCoords().forEach(coord => {
         bounds.extend(coord);
-    });
+    });*/
 
-    // Fit map to district bounds
-    map.fitBounds(bounds);
-    console.log('Representative of District ' + district.id + ': ' + district.representative.FirstName + ' ' + district.representative.LastName);
-    if (district.senator) {
-        console.log('Senator of District ' + district.id + ': ' + district.senator.FirstName + ' ' + district.senator.LastName);
-    }
+    // Fit map to district bounds of the first address in the district (or you could choose to fit to all addresses)
+    //bounds.extend(addresses[0]);
+    //map.fitBounds(bounds);
 }
 
 // User wants to find which district the address is in.
@@ -246,7 +290,28 @@ async function geocodeAddress(address) {
     });
 }
 
-
+// 2. Reverse Geocode LatLng to get address (for info window content)
+async function reverseGeocodeLatLng(lat, lng) {
+    const geocoder = new google.maps.Geocoder();
+    const latlng = { lat: parseFloat(lat), lng: parseFloat(lng) };
+    return await new Promise((resolve, reject) => {
+        geocoder.geocode({ location: latlng }, (results, status) => {
+            if (status === 'OK')
+            {
+                if (results[0])
+                {
+                    resolve(results[0].formatted_address);
+                } else
+                {
+                    reject('No results found');
+                }
+            } else
+            {
+                reject('Geocoder failed due to: ' + status);
+            }
+        });
+    });
+}
 
 
 // Main function to check if address is inside polygon

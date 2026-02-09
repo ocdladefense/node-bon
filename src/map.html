@@ -119,30 +119,38 @@
     </noscript>
 
     <script>
-
+        
 
         // Initialize and add the map
         let map;
 
         async function initMap()
         {
+            // Get the map element
+            const mapEl = document.getElementById('map');
+            if (!mapEl) {
+                console.error('Map element not found');
+                return null;
+            }
             // Request needed libraries.
-            //@ts-ignore
-            const { Map } = await google.maps.importLibrary("maps");
-            const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+            await google.maps.importLibrary("maps");
+            await google.maps.importLibrary("marker");
             await google.maps.importLibrary("geometry");
             await google.maps.importLibrary("geocoding");
-
-            map = new google.maps.Map(document.getElementById("map"), {
+            
+            // Initialize the map
+            map = new google.maps.Map(mapEl, {
                 zoom: 6,
                 center: { lat: 43.9336, lng: -120.5583 },
+                mapTypeId: 'roadmap'
             });
-            // The location of Oregon
-            const position = { lat: 43.9336, lng: -120.5583 };
+
+            // Signal that Google Maps is ready
+            if (window.initMapReady) {
+                window.initMapReady();
+            }
+            return map;
         }
-
-
-
 
         domReady(() =>
         {
@@ -153,6 +161,7 @@
 
     <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCfWNi-jamfXgtp5iPBLn63XV_3u5RJK0c&callback=initMap">
     </script>
+    <script type="module" src="/js/map.js"></script>
     <script src="/sw.js"></script>
 </body>
 
