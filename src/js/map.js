@@ -1,9 +1,6 @@
-import { getStartQuadrant, districts, remainingDistricts } from './utils/District.js';
-import District from './utils/District.js';
-
-// Global map and polygon variables
-let currentPolygons = [];
-let currentMarkers = [];
+import MapManager from './utils/MapManager.js';
+import DistrictManager from './utils/DistrictManager.js';
+import Address from './utils/Address.js';
 
 function domReady(cb) {
     document.readyState === 'interactive' || document.readyState === 'complete'
@@ -11,53 +8,7 @@ function domReady(cb) {
         : document.addEventListener('DOMContentLoaded', cb);
 }
 
-async function loadDistricts() {
-    // Get all districts data
-    let data = await fetch('/data/geo/House_Districts.geojson').then(response => response.json());
-    let features = data.features;
-    for (let i = 1; i <= 60; i++)
-
-        {
-
-        let districtCoords = features[i - 1].geometry.coordinates;
-        let district = new District(districtCoords, i);
-        districts.push(district);
-        console.log('Loaded district ' + i);
-    }
-}
-
-async function loadRepresentatives() {
-    // Get all representatives data
-    let data = await fetch('/data/geo/representatives.json').then(response => response.json());
-    // Process representatives data as needed (e.g., store in a variable, display on the page, etc.)
-    // pair representatives with their districts for easy lookup when displaying results
-    data.forEach(rep => {
-        let districtNum = rep.DistrictNumber;
-        if (districtNum >= 1 && districtNum <= 60) {
-            let district = districts[districtNum - 1]; // Get the District object (districtNum is 1-indexed)
-            district.representative = rep; // Add representative info to the District object
-        }
-    });
-    console.log('Loaded representatives data');
-}
-
-async function loadSenators() {
-    // Get all senators data
-    let data = await fetch('/data/geo/senators.json').then(response => response.json());
-    // Process senators data as needed (e.g., store in a variable, display on the page, etc.)
-    // pair senators with their districts for easy lookup when displaying results
-    data.forEach(senator => {
-        let districtNum = senator.DistrictNumber;
-        if (districtNum >= 1 && districtNum <= 30) {
-            let district = districts[districtNum - 1]; // Get the District object (districtNum is 1-indexed)
-            district.senator = senator; // Add senator info to the District object
-        }
-    });
-    console.log('Loaded senators data');
-}
-
 domReady(async function() {
-
     // Wait for Google Maps to be ready
     await new Promise((resolve) => {
         if (window.google && window.google.maps) {
@@ -67,267 +18,99 @@ domReady(async function() {
         }
     });
 
-    // Wait a bit more to ensure geometry library is fully loaded
+    // Wait for geometry library
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Verify geometry library is loaded
     if (!window.google?.maps?.geometry?.poly) {
         console.error('Google Maps geometry library not loaded');
         await google.maps.importLibrary("geometry");
     }
 
-    // Initialize the map first
-    await initMap();
-    
-    // Load up all of the district data so we don't have to "wait" on submission.
-    // This is perceived efficiency - the user will experience a delay on page load, but then no delay when they submit the form. If we waited to load until form submission, the user would experience a delay after submission, which is worse UX.
-    await loadDistricts();
-    await loadRepresentatives();
-    await loadSenators();
-    await outlineAllDistrictBoundaries();
+    // Initialize managers
+    const mapManager = MapManager.getInstance();
+    const districtManager = DistrictManager.getInstance();
 
-    let form = document.getElementById('district-lookup');
+    // Load all data
+    await mapManager.initialize();
+    await districtManager.loadDistricts();
+    await districtManager.loadRepresentatives();
+    await districtManager.loadSenators();
+
+    // Outline all districts on the map
+    districtManager.outlineAll(mapManager.getMap());
+
+    // Set up form handler
+    const form = document.getElementById('district-lookup');
     form.addEventListener('submit', async function(event) {
-
-        let action = event.submitter.id;
-        event.preventDefault(); // Prevent form submission
+        event.preventDefault();
         event.stopPropagation();
-        let address = document.getElementById('address').value;
-        let resultDiv = document.getElementById('result');
+
+        const addressInput = document.getElementById('address').value;
+        const resultDiv = document.getElementById('result');
         resultDiv.textContent = 'Checking...';
 
-        // Clear previous polygons
-        currentPolygons.forEach(polygon => polygon.setMap(null));
-        currentPolygons = [];
+        // Clear previous results
+        mapManager.clearAll();
+        districtManager.clearAllAddresses();
 
-        // Remove previous marker(s) after new search
-        currentMarkers.forEach(marker => marker.setMap(null));
-        currentMarkers = [];
+        // Parse addresses
+        const addressStrings = addressInput.split('\n')
+            .map(a => a.trim())
+            .filter(a => a.length > 0);
 
-        // Address can take multiple addresses separated by new lines
-        let addresses = address.split('\n').map(a => a.trim()).filter(a => a.length > 0);
+        // Geocode all addresses
+        const locations = await Promise.all(
+            addressStrings.map(async (addr) => {
+                try {
+                    return await Address.geocode(addr);
+                } catch (error) {
+                    console.error('Geocoding failed for:', addr, error);
+                    return null;
+                }
+            })
+        );
 
-        // Batch geocode all addresses into points.
-        const points = await Promise.all(addresses.map(async (address) => await geocodeAddress(address)));
+        // Find districts and create Address objects
+        const results = addressStrings.map((addrString, i) => {
+            const location = locations[i];
+            if (!location) return null;
+            // Find the district for this location
+            const district = districtManager.findDistrictForLocation(location);
+            if (!district) return null;
+            // Create an Address object and add it to the district
+            const address = new Address(addrString, location, district);
+            // Return the district and address for display
+            district.addAddress(address);
+            return { district, address };
+        }).filter(r => r !== null);
 
-        // Batch all points into their districts.
-        let results = points.map((addressLatLng) => showDistrict(addressLatLng));
-
-        // Track unique districts and their associated addresses
-        let districtAddresses = {};
-        results.forEach((district, index) => {
-            if (!district) return;
-            if (!districtAddresses[district.id]) {
-                districtAddresses[district.id] = [];
-            }
-            districtAddresses[district.id].push(points[index]);
-        });
-
-        // Render results
-        if (Object.keys(districtAddresses).length > 0) {
-            resultDiv.innerHTML = Object.entries(districtAddresses).map(([districtId, addressPoints]) => {
-                return 'District ' + districtId + (addressPoints.length > 1 ? ' (' + addressPoints.length + ' addresses)' : '');
+        // Display results
+        const districtsWithAddresses = districtManager.getDistrictsWithAddresses();
+        
+        // If we found any districts, display them and add markers
+        if (districtsWithAddresses.length > 0) {
+            resultDiv.innerHTML = districtsWithAddresses.map(district => {
+                const count = district.getAddressCount();
+                return `District ${district.id}${count > 1 ? ` (${count} addresses)` : ''}`;
             }).join('<br />');
 
-            // Draw each district only once, but mark all addresses
-            for (let [districtId, addressPoints] of Object.entries(districtAddresses)) {
-                let district = districts[districtId - 1];
-                await drawDistrictOnMap(district, addressPoints);
-            }
+            // Highlight districts and draw markers
+            const map = mapManager.getMap();
+            districtsWithAddresses.forEach(district => {
+                district.highlight(map);
+                district.drawMarkers(map);
+            });
+            /*
+            // Fit map to show all results
+            const bounds = new google.maps.LatLngBounds();
+            districtsWithAddresses.forEach(district => {
+                district.addresses.forEach(addr => bounds.extend(addr.location));
+            });
+            map.fitBounds(bounds);*/
         } else {
             resultDiv.textContent = "Not found";
         }
     });
 });
-
-// Function to outline all district border only
-async function outlineAllDistrictBoundaries() {
-    // Draw each district polygon perimiter
-    for (let district of districts) {
-        const polygon = new google.maps.Polygon({
-            paths: district.getAsGoogleMapCoords(),
-            fillColor: '#2b6cb0',
-            fillOpacity: 0.0, // No fill, just border
-            strokeColor: '#2b6cb0',
-            strokeOpacity: 1,
-            strokeWeight: 2,
-            clickable: false // No click events for the full map view
-        });
-        polygon.setMap(map);
-        currentPolygons.push(polygon);
-    }
-}
-
-// Function to draw district on map (once) and mark all addresses in it
-async function drawDistrictOnMap(district, addressLatLngs) {
-    if (!map || !district) return;
-
-    // keep district boundaries visible when drawing polygon for address inside district
-    await outlineAllDistrictBoundaries();
-    // Ensure addressLatLngs is an array
-    const addresses = Array.isArray(addressLatLngs) ? addressLatLngs : [addressLatLngs];
-
-    // Create and draw the polygon ONCE per district
-    const polygon = new google.maps.Polygon({
-        paths: district.getAsGoogleMapCoords(),
-        fillColor: '#2b6cb0',
-        fillOpacity: 0.35,
-        strokeColor: '#2b6cb0',
-        strokeOpacity: 1,
-        strokeWeight: 2,
-        clickable: true
-    });
-    polygon.setMap(map);
-    currentPolygons.push(polygon);
-
-    const infoWindow = new google.maps.InfoWindow({
-        content: 'Loading...'
-    });
-
-    // add click listener to polygon to show representative and senator info
-    google.maps.event.addListener(polygon, 'click', async () => {
-        // Get all addresses in this district for display
-        const addressList = await Promise.all(addresses.map(async (addr) => 
-            await reverseGeocodeLatLng(addr.lat(), addr.lng())
-        ));
-        
-        infoWindow.setContent(
-            '<div><strong>District ' + district.id + '</strong><br>' +
-            '<b>Address(es):</b><br>' + addressList.join('<br>') + '<br><br>' +
-            (district.representative ? '<b>Representative: </b>' + district.representative.FirstName + ' ' + district.representative.LastName + '<br>' + district.representative.Party + '<br>' + district.representative.EmailAddress + '<br>' : '') +
-            (district.senator ? '<b>Senator: </b>' + district.senator.FirstName + ' ' + district.senator.LastName + '<br>' + district.senator.Party + '<br>' + district.senator.EmailAddress + '<br>' : '') +
-            '</div>'
-        );
-        infoWindow.setPosition(addresses[0]);
-        infoWindow.open(map);
-    });
-
-    // Add a marker for EACH address in the district
-    for (let addressLatLng of addresses) {
-        const marker = new google.maps.Marker({
-            position: addressLatLng,
-            map: map,
-            title: await reverseGeocodeLatLng(addressLatLng.lat(), addressLatLng.lng())
-        });
-        currentMarkers.push(marker);
-    }
-    /*
-    // Calculate bounds for the district
-    const bounds = new google.maps.LatLngBounds();
-    district.getAsGoogleMapCoords().forEach(coord => {
-        bounds.extend(coord);
-    });*/
-
-    // Fit map to district bounds of the first address in the district (or you could choose to fit to all addresses)
-    //bounds.extend(addresses[0]);
-    //map.fitBounds(bounds);
-}
-
-// User wants to find which district the address is in.
-function showDistrict(addressLatLng) {
-    // Try quadrant first (optimization)
-    // let startQuadrant = getStartQuadrant(addressLatLng);
-    const addressLat = addressLatLng.lat();
-    const addressLng = addressLatLng.lng();
-    // Log starting quadrant name for debugging
-    // console.log('Determined starting quadrant with ' + startQuadrant.length + ' districts...');
-
-
-
-    let possibles = districts.filter(d => !d.isOutside([addressLng, addressLat]));
-
-
-    for (let district of possibles)
-    {
-        console.log('Checking district ' + (districts.indexOf(district) + 1) + '...');
-        if (isLatLngInDistrict(addressLatLng, district))
-        {
-            return district;
-        }
-    }
-
-
-    // If not found in quadrant, check array of districts
-    // const remainingDistrictsList = remainingDistricts(startQuadrant);
-    // console.log('Checking remaining ' + remainingDistrictsList.length + ' districts...');
-
-
-
-    /*
-    // Check remaining districts
-    for (let districtNum of remainingDistrictsList) {
-        console.log('Checking district ' + districtNum + '...');
-        // Get the District object from the districts array (districtNum is 1-indexed)
-        let district = districts[districtNum - 1];
-        // Check if address is in district
-        if (district.isOutside(addressLat, addressLng)) {
-            continue;
-        }
-        // If not outside, do full check
-        if (isLatLngInDistrict(addressLatLng, district)) {
-            return 'The address is inside House District ' + districtNum + '.';
-        }
-    }
-        */
-
-    return null;
-}
-
-
-// 1. Geocode the Address (assuming you have a geocoding service or API call)
-async function geocodeAddress(address) {
-    const geocoder = new google.maps.Geocoder();
-    return await new Promise((resolve, reject) => {
-        geocoder.geocode({ 'address': address }, (results, status) => {
-            if (status === 'OK')
-            {
-                resolve(results[0].geometry.location); // Returns LatLng object
-            } else
-            {
-                reject('Geocode was not successful for the following reason: ' + status);
-            }
-        });
-    });
-}
-
-// 2. Reverse Geocode LatLng to get address (for info window content)
-async function reverseGeocodeLatLng(lat, lng) {
-    const geocoder = new google.maps.Geocoder();
-    const latlng = { lat: parseFloat(lat), lng: parseFloat(lng) };
-    return await new Promise((resolve, reject) => {
-        geocoder.geocode({ location: latlng }, (results, status) => {
-            if (status === 'OK')
-            {
-                if (results[0])
-                {
-                    resolve(results[0].formatted_address);
-                } else
-                {
-                    reject('No results found');
-                }
-            } else
-            {
-                reject('Geocoder failed due to: ' + status);
-            }
-        });
-    });
-}
-
-
-// Main function to check if address is inside polygon
-function isLatLngInDistrict(addressLatLng, district) {
-    try
-    {
-
-        const kmlPolygon = new google.maps.Polygon({ paths: district.getAsGoogleMapCoords() });
-        // 4. Use containsLocation()
-        return google.maps.geometry.poly.containsLocation(addressLatLng, kmlPolygon);
-    } catch (error)
-    {
-        console.error('Error:', error);
-        return false;
-    }
-}
 
 // Usage example
 // isAddressInKMLPolygon("1600 Amphitheatre Parkway, Mountain View, CA");
