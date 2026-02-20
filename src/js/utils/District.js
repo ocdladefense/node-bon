@@ -16,6 +16,7 @@ export default class District {
 
     // District number (1-60)
     id;
+    senateId;
     westPoint;
     eastPoint;
     southPoint;
@@ -26,8 +27,9 @@ export default class District {
     outlinePolygon = null;
     highlightPolygon = null;
 
-    constructor(coords, id) {
+    constructor(coords, id, senateId) {
         this.id = id;
+        this.senateId = senateId;
         this.coords = coords[0]; // In Oregon district boundaries are contiguous, so we can use the first set of coordinates for the main polygon. If there were multiple polygons (e.g., islands), we would need to check all of them. 
         // Precalculate bounding box points for performance
         this.westPoint = District.getWesternMostPoint(this.coords);
@@ -111,7 +113,7 @@ export default class District {
     }
 
     // Draw highlighted polygon with fill and click listener
-    highlight(map) {
+    highlight(map, districtManager) {
         // Clear existing highlight if present
         const mapManager = MapManager.getInstance();
         // Create a polygon with fill for highlighting
@@ -131,21 +133,34 @@ export default class District {
 
         // Add click listener for info window
         this.highlightPolygon.addListener('click', async (event) => {
-            await this.showInfoWindow(map, event.latLng);
+            await this.showInfoWindow(map, event.latLng, districtManager);
         });
     }
 
+    // get everything needed to draw this district (outline and highlight) as a single object for easy cleanup
+    getDrawableObject() {
+        
+        return [this.outlinePolygon, this.highlightPolygon]; // Return an array of all polygons related to this district for easy cleanup
+    }
+
     // Show info window with district details
-    async showInfoWindow(map, position) {
+    async showInfoWindow(map, position, districtManager) {
         // Get formatted addresses for all addresses in this district
         const addressList = await Promise.all(
             this.addresses.map(async addr => await addr.getFormattedAddress())
         );
+
+        // Find the Senate district for this location
+        const senateDistrict = districtManager.findSenateDistrictForLocation(position);
+        this.senator = senateDistrict?.senator; // Cache senator info for this district
+        this.senateId = senateDistrict?.id; // Cache senate district ID for display
+        
         // Create content for the info window
         const content = `
-            <div><strong>District ${this.id}</strong><br>
+            <div><strong>House District ${this.id}</strong><br>
+            ${this.senator ? `<strong>Senate District ${this.senateId}</strong><br>` : ''}
             <b>Address(es):</b><br>${addressList.join('<br>')}<br><br>
-            ${this.representative ? `<b>Representative: </b>${this.representative.FirstName} ${this.representative.LastName}<br>${this.representative.Party}<br>${this.representative.EmailAddress}<br>` : ''}
+            ${this.representative ? `<b>Representative: </b>${this.representative.FirstName} ${this.representative.LastName}<br>${this.representative.Party}<br>${this.representative.EmailAddress}<br><br>` : ''}
             ${this.senator ? `<b>Senator: </b>${this.senator.FirstName} ${this.senator.LastName}<br>${this.senator.Party}<br>${this.senator.EmailAddress}<br>` : ''}
             </div>
         `;
@@ -159,7 +174,7 @@ export default class District {
 
     // Draw markers for all addresses in this district
     drawMarkers(map) {
-        // Get the singleton instance of MapManager to add markers to the currentMarkers array for proper cleanup later
+        // Get singleton instance of MapManager
         const mapManager = MapManager.getInstance();
         // Loop through all addresses in this district and create markers
         this.addresses.forEach(async address => {

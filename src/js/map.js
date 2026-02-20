@@ -9,34 +9,25 @@ function domReady(cb) {
 }
 
 domReady(async function() {
-    // Wait for Google Maps to be ready
-    await new Promise((resolve) => {
-        if (window.google && window.google.maps) {
-            resolve();
-        } else {
-            window.initMapReady = resolve;
-        }
-    });
-
-    // Wait for geometry library
-    await new Promise(resolve => setTimeout(resolve, 100));
-    if (!window.google?.maps?.geometry?.poly) {
-        console.error('Google Maps geometry library not loaded');
-        await google.maps.importLibrary("geometry");
-    }
-
-    // Initialize managers
-    const mapManager = MapManager.getInstance();
-    const districtManager = DistrictManager.getInstance();
+    const districtManager = new DistrictManager();
 
     // Load all data
-    await mapManager.initialize();
     await districtManager.loadDistricts();
     await districtManager.loadRepresentatives();
     await districtManager.loadSenators();
 
+    // Initialize MapManager singleton
+    const mapManager = MapManager.getInstance();
+    await mapManager.load();
+
     // Outline all districts on the map
     districtManager.outlineAll(mapManager.getMap());
+/*
+    // Draw all districts on the map
+    mapManager.draw(districtManager.houseDistricts);
+    mapManager.draw(districtManager.senateDistricts);
+    // Draw any existing markers (if needed)
+    mapManager.draw(mapManager.currentMarkers); */
 
     // Set up form handler
     const form = document.getElementById('district-lookup');
@@ -48,7 +39,7 @@ domReady(async function() {
         const resultDiv = document.getElementById('result');
         resultDiv.textContent = 'Checking...';
 
-        // Clear previous results
+        // Clear previous results (highlights and markers)
         mapManager.clearAll();
         districtManager.clearAllAddresses();
 
@@ -96,7 +87,7 @@ domReady(async function() {
             // Highlight districts and draw markers
             const map = mapManager.getMap();
             districtsWithAddresses.forEach(district => {
-                district.highlight(map);
+                district.highlight(map, districtManager);
                 district.drawMarkers(map);
             });
             /*

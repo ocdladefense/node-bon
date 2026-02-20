@@ -9,33 +9,15 @@ class MapManager {
         if (MapManager.instance) {
             return MapManager.instance;
         }
-        // Set the singleton instance
         MapManager.instance = this;
     }
 
-    // Static method to get the singleton instance
+    // Static method to get singleton instance
     static getInstance() {
         if (!MapManager.instance) {
             MapManager.instance = new MapManager();
         }
         return MapManager.instance;
-    }
-
-    // Initialize the Google Map
-    async initialize() {
-        const mapEl = document.getElementById('map');
-        if (!mapEl) {
-            console.error('Map element not found');
-            return null;
-        }
-        // Create the Google Map centered on Oregon
-        this.map = new google.maps.Map(mapEl, {
-            zoom: 6,
-            center: { lat: 43.9336, lng: -120.5583 },
-            mapTypeId: 'roadmap'
-        });
-        // Return the map instance for chaining if needed
-        return this.map;
     }
 
     // Getter for the map instance
@@ -65,11 +47,98 @@ class MapManager {
         this.currentMarkers.push(marker);
     }
 
+    // Draw a list of districts on the map
+    draw(districts, senateDistricts) {
+        const allDistricts = [...districts, ...senateDistricts];
+        allDistricts.forEach(district => {
+            const polygon = district.outline(this.map); // Get the polygon for this district
+            polygon.setMap(this.map); // Add the polygon to the map
+            this.addPolygon(polygon); // Track the polygon for cleanup
+        });
+    }
+
     // Clear all polygons and markers from the map
     clearAll() {
         this.clearPolygons();
         this.clearMarkers();
+    } 
+
+    async load() {
+        this.map = await load().then(requestLibraries).then(initMap).catch(error => {
+            console.error('Error loading Google Maps:', error);
+        });
     }
+}
+
+
+
+
+async function initMap()
+{
+    // Get the map element
+    const mapEl = document.getElementById('map');
+    if (!mapEl) {
+        throw new Error('Map element not found');
+    }
+   
+
+
+    // Initialize the map
+    let map = new google.maps.Map(mapEl, {
+        zoom: 6,
+        center: { lat: 43.9336, lng: -120.5583 },
+        mapTypeId: 'roadmap'
+    });
+
+    
+    return map;
+}
+
+async function requestLibraries() {
+    // Request needed libraries.
+    await google.maps.importLibrary("maps");
+    await google.maps.importLibrary("marker");
+    await google.maps.importLibrary("geometry");
+    await google.maps.importLibrary("geocoding");
+}
+    
+function load(){
+    let foobar = new Promise((resolve, reject) => {
+        let script = createScriptElement("https://maps.googleapis.com/maps/api/js?key=AIzaSyCfWNi-jamfXgtp5iPBLn63XV_3u5RJK0c&");
+        script.addEventListener('load', () => { 
+            resolve();
+        });
+        injectScriptElement(script);
+    });
+
+    return foobar;
+}
+
+
+
+
+
+
+
+function injectScriptElement(tag) {
+
+    let firstScriptTag = document.getElementsByTagName('script')[0];
+    if (firstScriptTag == null) {
+        (document.body || document.head).appendChild(tag);
+    }
+    else {
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+
+    return tag;
+}
+
+function createScriptElement(src) {
+    let tag = document.createElement('script');
+    tag.src = src;
+    tag.async = true; // Load asynchronously to avoid blocking the page
+
+    return tag;
 }
 
 export default MapManager; // Export the singleton instance of MapManager

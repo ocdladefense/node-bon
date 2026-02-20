@@ -21,7 +21,7 @@ export function injectScriptElement(src) {
     let tag = document.createElement('script');
     tag.src = src;
 
-    let firstScriptTag = document.getElementsByTagName('script')[0];
+
     if (firstScriptTag == null) {
         (document.body || document.head).appendChild(tag);
     }
