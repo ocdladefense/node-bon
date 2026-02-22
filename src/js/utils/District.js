@@ -1,5 +1,3 @@
-import MapManager from './MapManager.js';
-
 // Separate out districts into regions.
 // This allows us to optimize the search by only checking
 // districts in the relevant region first.
@@ -24,8 +22,6 @@ export default class District {
     addresses = [];
     representative = null;
     senator = null;
-    outlinePolygon = null;
-    highlightPolygon = null;
 
     constructor(coords, id, senateId) {
         this.id = id;
@@ -84,107 +80,20 @@ export default class District {
         return northernMostPoint;
     }
     
-    // Convert district coordinates to a Google Maps Polygon object
-    toPolygon() {
-        // Convert [lng, lat] to {lat: lat, lng: lng}
-        const paths = this.getCoordsAsObjects();
-
-
-        
-        // Create a polygon with no fill and a border for the district outline
-        const polygon = new google.maps.Polygon({
-            paths: paths,
-            fillColor: '#2b6cb0',
-            fillOpacity: 0.0, // No fill, just border
-            strokeColor: '#2b6cb0',
-            strokeOpacity: 1,
-            strokeWeight: 2,
-            clickable: false // No click events for the full map view
-        });
-        return polygon;
-    }
-
-    // Draw outline (border only) on map load
-    outline(map) {
-        if (this.outlinePolygon) return; // Already outlined
-        // Call toPolygon to create the polygon object for each district
-        this.outlinePolygon = this.toPolygon();
-        this.outlinePolygon.setMap(map);
-    }
-
-    // Draw highlighted polygon with fill and click listener
-    highlight(map, districtManager) {
-        // Clear existing highlight if present
-        const mapManager = MapManager.getInstance();
-        // Create a polygon with fill for highlighting
-        this.highlightPolygon = new google.maps.Polygon({
-            paths: this.getCoordsAsObjects(),
-            fillColor: '#2b6cb0',
-            fillOpacity: 0.35,
-            strokeColor: '#2b6cb0',
-            strokeOpacity: 1,
-            strokeWeight: 2,
-            clickable: true
-        });
-
-        // Add the highlight polygon to the map
-        this.highlightPolygon.setMap(map);
-        mapManager.addPolygon(this.highlightPolygon);
-
-        // Add click listener for info window
-        this.highlightPolygon.addListener('click', async (event) => {
-            await this.showInfoWindow(map, event.latLng, districtManager);
-        });
-    }
-
-    // get everything needed to draw this district (outline and highlight) as a single object for easy cleanup
-    getDrawableObject() {
-        
-        return [this.outlinePolygon, this.highlightPolygon]; // Return an array of all polygons related to this district for easy cleanup
-    }
-
-    // Show info window with district details
-    async showInfoWindow(map, position, districtManager) {
-        // Get formatted addresses for all addresses in this district
+    // Build info window content for this district
+    async getInfo(position, districtManager) {
         const addressList = await Promise.all(
             this.addresses.map(async addr => await addr.getFormattedAddress())
         );
-
-        // Find the Senate district for this location
-        const senateDistrict = districtManager.findSenateDistrictForLocation(position);
-        this.senator = senateDistrict?.senator; // Cache senator info for this district
-        this.senateId = senateDistrict?.id; // Cache senate district ID for display
         
-        // Create content for the info window
-        const content = `
+        return `
             <div><strong>House District ${this.id}</strong><br>
-            ${this.senator ? `<strong>Senate District ${this.senateId}</strong><br>` : ''}
+            <strong>Senate District ${this.senateId}</strong><br>
             <b>Address(es):</b><br>${addressList.join('<br>')}<br><br>
             ${this.representative ? `<b>Representative: </b>${this.representative.FirstName} ${this.representative.LastName}<br>${this.representative.Party}<br>${this.representative.EmailAddress}<br><br>` : ''}
             ${this.senator ? `<b>Senator: </b>${this.senator.FirstName} ${this.senator.LastName}<br>${this.senator.Party}<br>${this.senator.EmailAddress}<br>` : ''}
             </div>
         `;
-        // Create and open the info window at the clicked position
-        const infoWindow = new google.maps.InfoWindow({ content });
-        // Set the position of the info window to the clicked location and open it
-        infoWindow.setPosition(position);
-        // Open the info window on the map
-        infoWindow.open(map);
-    }
-
-    // Draw markers for all addresses in this district
-    drawMarkers(map) {
-        // Get singleton instance of MapManager
-        const mapManager = MapManager.getInstance();
-        // Loop through all addresses in this district and create markers
-        this.addresses.forEach(async address => {
-            const marker = new google.maps.Marker({
-                position: address.location,
-                map: map,
-                title: await address.getFormattedAddress()
-            });
-            mapManager.addMarker(marker); // Add marker to MapManager for cleanup
-        });
     }
     
     // Check if a given coordinate is outside the bounding box of this district

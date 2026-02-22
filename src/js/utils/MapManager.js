@@ -47,13 +47,55 @@ class MapManager {
         this.currentMarkers.push(marker);
     }
 
-    // Draw a list of districts on the map
-    draw(districts, senateDistricts) {
-        const allDistricts = [...districts, ...senateDistricts];
-        allDistricts.forEach(district => {
-            const polygon = district.outline(this.map); // Get the polygon for this district
-            polygon.setMap(this.map); // Add the polygon to the map
-            this.addPolygon(polygon); // Track the polygon for cleanup
+    // Draw a polygon on the map
+    draw(paths, shaded = false, content = null) {
+        const polygon = new google.maps.Polygon({
+            paths: paths,
+            fillColor: '#2b6cb0',
+            fillOpacity: shaded ? 0.35 : 0.0, // Fill only if shaded
+            strokeColor: '#2b6cb0',
+            strokeOpacity: 1,
+            strokeWeight: 2,
+            clickable: !!content
+        });
+        polygon.setMap(this.map);
+        this.addPolygon(polygon);
+        // If a content function is provided, add a click listener to the polygon
+        if (content) {
+            polygon.addListener('click', async (event) => {
+                const infoContent = await content(event);
+                const infoWindow = new google.maps.InfoWindow({ content: infoContent });
+                infoWindow.setPosition(event.latLng);
+                infoWindow.open(this.map);
+            });
+        }
+    }
+
+    // Shade districts and make them clickable with info windows
+    makePolygonClickable(districts, districtManager) {
+        // Loop through each district and draw it shaded with a click listener
+        districts.forEach(district => {
+            this.draw(
+                district.getCoordsAsObjects(), 
+                true, 
+                (event) => district.getInfo(event.latLng, districtManager)
+            );
+        });
+    }  
+
+    // Draw markers for all addresses within the given districts
+    drawMarkers(districts) {
+        // Loop through each district and its addresses to create markers
+        districts.forEach(district => {
+            // For each address in the district, create a marker
+            district.addresses.forEach(async address => {
+                const marker = new google.maps.Marker({
+                    position: address.location,
+                    map: this.map,
+                    title: await address.getFormattedAddress()
+                });
+                this.addMarker(marker); // Track marker for cleanup
+            });
         });
     }
 

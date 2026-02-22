@@ -147,11 +147,7 @@ class DistrictManager {
         return this.houseDistricts.filter(d => d.hasAddresses()).concat(this.senateDistricts.filter(d => d.hasAddresses()));
     }
 
-    // Outline all districts on the map
-    outlineAll(map) {
-        this.houseDistricts.forEach(d => d.outline(map));
-        this.senateDistricts.forEach(d => d.outline(map));
-    }
+
 }
 
-export default DistrictManager; // Export the singleton instance of DistrictManager
+export default DistrictManager; 

@@ -21,7 +21,7 @@ domReady(async function() {
     await mapManager.load();
 
     // Outline all districts on the map
-    districtManager.outlineAll(mapManager.getMap());
+    districtManager.houseDistricts.forEach(district => mapManager.draw(district.getCoordsAsObjects(), false));
 /*
     // Draw all districts on the map
     mapManager.draw(districtManager.houseDistricts);
@@ -39,9 +39,12 @@ domReady(async function() {
         const resultDiv = document.getElementById('result');
         resultDiv.textContent = 'Checking...';
 
-        // Clear previous results (highlights and markers)
+        // Clear previous results (highlights and markers only, keep outlines)
         mapManager.clearAll();
         districtManager.clearAllAddresses();
+
+        // Re-draw all district outlines to ensure they stay visible
+        districtManager.houseDistricts.forEach(district => mapManager.draw(district.getCoordsAsObjects(), false));
 
         // Parse addresses
         const addressStrings = addressInput.split('\n')
@@ -66,7 +69,13 @@ domReady(async function() {
             if (!location) return null;
             // Find the district for this location
             const district = districtManager.findDistrictForLocation(location);
+            // Find the senate district for this location to get the senator info
+            const senateDistrict = districtManager.findSenateDistrictForLocation(location);
+            // If no district found, skip this address
             if (!district) return null;
+            // Attach senator info to the district for display in the info window
+            district.senator = senateDistrict?.senator || null;
+            district.senateId = senateDistrict?.id || null;
             // Create an Address object and add it to the district
             const address = new Address(addrString, location, district);
             // Return the district and address for display
@@ -77,19 +86,24 @@ domReady(async function() {
         // Display results
         const districtsWithAddresses = districtManager.getDistrictsWithAddresses();
         
-        // If we found any districts, display them and add markers
+
+
+        //If there are results, draw the highlighted districts and markers on the map
+        if (districtsWithAddresses.length > 0) {
+            mapManager.makePolygonClickable(districtsWithAddresses, districtManager);
+            mapManager.drawMarkers(districtsWithAddresses);
+        }
+
+
+
+
+        // Display text results
         if (districtsWithAddresses.length > 0) {
             resultDiv.innerHTML = districtsWithAddresses.map(district => {
                 const count = district.getAddressCount();
                 return `District ${district.id}${count > 1 ? ` (${count} addresses)` : ''}`;
             }).join('<br />');
 
-            // Highlight districts and draw markers
-            const map = mapManager.getMap();
-            districtsWithAddresses.forEach(district => {
-                district.highlight(map, districtManager);
-                district.drawMarkers(map);
-            });
             /*
             // Fit map to show all results
             const bounds = new google.maps.LatLngBounds();
