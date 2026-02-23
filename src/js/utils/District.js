@@ -13,8 +13,8 @@ export let districts = [];
 export default class District {
 
     // District number (1-60)
-    id;
-    senateId;
+    id; // h16 = house district 16
+    senateId; // 
     westPoint;
     eastPoint;
     southPoint;
@@ -81,10 +81,8 @@ export default class District {
     }
     
     // Build info window content for this district
-    async getInfo(position, districtManager) {
-        const addressList = await Promise.all(
-            this.addresses.map(async addr => await addr.getFormattedAddress())
-        );
+    async getInfo() {
+        const addressList = this.addresses.map(addr => `&bull; ${addr.address}`);
         
         return `
             <div><strong>House District ${this.id}</strong><br>

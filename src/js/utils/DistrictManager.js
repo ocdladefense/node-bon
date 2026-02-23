@@ -86,7 +86,7 @@ class DistrictManager {
     }
 
     // Find the district for a given location
-    findDistrictForLocation(location) {
+    findHouseDistrict(location) {
         const lat = location.lat();
         const lng = location.lng();
 
@@ -104,7 +104,7 @@ class DistrictManager {
     }
 
     // Find the senate district for a given location
-    findSenateDistrictForLocation(location) {
+    findSenateDistrict(location) {
         const lat = location.lat();
         const lng = location.lng();
 

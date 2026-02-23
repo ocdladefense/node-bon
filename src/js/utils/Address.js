@@ -5,6 +5,9 @@ export default class Address {
     location; // { lat: number, lng: number } - LatLng object
     district; // District object this address belongs to
     formattedAddress = null; // Cached formatted address from reverse geocoding
+    static geocoder; 
+    house;
+    senate;
 
     constructor(address, location, district) {
         this.address = address; // Store original address string
@@ -17,6 +20,16 @@ export default class Address {
         return this.district.id;
     }
 
+    // Check if the address is valid (non-empty string)
+    isValid() {
+        if (this.address.length === 0) {
+            return false;
+        }
+        return true;
+    }
+
+
+    
     // Get formatted address (with caching)
     async getFormattedAddress() {
         // Return cached formatted address if available
@@ -38,27 +51,31 @@ export default class Address {
     }
 
     // Static method to geocode an address string to LatLng
-    static async geocode(addressString) {
-        const geocoder = new google.maps.Geocoder();
-        // Wrap the geocoding in a Promise to use async/await
-        return await new Promise((resolve, reject) => {
+    geocode() {
+        if (!Address.geocoder) {
+            Address.geocoder = new google.maps.Geocoder();
+        }
+        // Wrap the geocoding in a Promise
+        return new Promise((resolve, reject) => {
             // Geocode the address string
-            geocoder.geocode({ address: addressString }, (results, status) => {
+            Address.geocoder.geocode({ address: this.address }, (results, status) => {
                 if (status === 'OK') {
                     resolve(results[0].geometry.location);
                 } else {
                     reject('Geocode failed: ' + status);
                 }
             });
+        }).then(location => {
+            this.location = location;
+            return this;
         });
     }
 
     // Static method to reverse geocode LatLng to formatted address
     static async reverseGeocode(lat, lng) {
-        const geocoder = new google.maps.Geocoder();
         const latlng = { lat: parseFloat(lat), lng: parseFloat(lng) };
         return await new Promise((resolve, reject) => {
-            geocoder.geocode({ location: latlng }, (results, status) => {
+            Address.geocoder.geocode({ location: latlng }, (results, status) => {
                 if (status === 'OK' && results[0]) {
                     resolve(results[0].formatted_address);
                 } else {

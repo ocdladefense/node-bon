@@ -21,7 +21,7 @@ domReady(async function() {
     await mapManager.load();
 
     // Outline all districts on the map
-    districtManager.houseDistricts.forEach(district => mapManager.draw(district.getCoordsAsObjects(), false));
+    districtManager.houseDistricts.forEach(district => mapManager.draw(district.getCoordsAsObjects(), district.id, false));
 /*
     // Draw all districts on the map
     mapManager.draw(districtManager.houseDistricts);
@@ -40,82 +40,72 @@ domReady(async function() {
         resultDiv.textContent = 'Checking...';
 
         // Clear previous results (highlights and markers only, keep outlines)
-        mapManager.clearAll();
+        mapManager.resetPolygons();
         districtManager.clearAllAddresses();
 
-        // Re-draw all district outlines to ensure they stay visible
-        districtManager.houseDistricts.forEach(district => mapManager.draw(district.getCoordsAsObjects(), false));
-
+        
         // Parse addresses
-        const addressStrings = addressInput.split('\n')
-            .map(a => a.trim())
-            .filter(a => a.length > 0);
+        const addresses = addressInput.split('\n')
+            .map(a => new Address(a.trim()))
+            .filter(a => a.isValid()); // Filter out invalid addresses
 
-        // Geocode all addresses
-        const locations = await Promise.all(
-            addressStrings.map(async (addr) => {
-                try {
-                    return await Address.geocode(addr);
-                } catch (error) {
-                    console.error('Geocoding failed for:', addr, error);
-                    return null;
-                }
-            })
-        );
+        await Promise.all(addresses.map(addr => 
+            addr.geocode().then((addr) => mapManager.drawMarker(addr)))); // Geocode all addresses in parallel
 
-        // Find districts and create Address objects
-        const results = addressStrings.map((addrString, i) => {
-            const location = locations[i];
-            if (!location) return null;
-            // Find the district for this location
-            const district = districtManager.findDistrictForLocation(location);
-            // Find the senate district for this location to get the senator info
-            const senateDistrict = districtManager.findSenateDistrictForLocation(location);
-            // If no district found, skip this address
-            if (!district) return null;
-            // Attach senator info to the district for display in the info window
-            district.senator = senateDistrict?.senator || null;
-            district.senateId = senateDistrict?.id || null;
-            // Create an Address object and add it to the district
-            const address = new Address(addrString, location, district);
-            // Return the district and address for display
-            district.addAddress(address);
-            return { district, address };
-        }).filter(r => r !== null);
+
+
+
+        
+        addresses.forEach(addr => {
+            addr.house = districtManager.findHouseDistrict(addr.location);
+        }); // Associate addresses with districts
+
+
+
+
+        addresses.forEach(addr => { 
+            addr.senate = districtManager.findSenateDistrict(addr.location);
+        }); // Associate addresses with senate districts for senator info
+
+
+        addresses.forEach(addr => addr.house.addAddress(addr)); // Add addresses to their respective districts for info windows and counting
+        addresses.forEach(addr => addr.senate.addAddress(addr)); // Add addresses to their respective senate districts for info windows and counting
+
+        addresses.forEach(addr => {
+            mapManager.shadePolygon(addr.house.id);
+        });
+
+
+
+
+
 
         // Display results
-        const districtsWithAddresses = districtManager.getDistrictsWithAddresses();
+        //const districtsWithAddresses = districtManager.getDistrictsWithAddresses();
         
 
 
-        //If there are results, draw the highlighted districts and markers on the map
-        if (districtsWithAddresses.length > 0) {
-            mapManager.makePolygonClickable(districtsWithAddresses, districtManager);
-            mapManager.drawMarkers(districtsWithAddresses);
-        }
+        
 
 
 
 
-        // Display text results
+
+    });
+});
+
+function displayTextResults() {
+            // Display text results
         if (districtsWithAddresses.length > 0) {
             resultDiv.innerHTML = districtsWithAddresses.map(district => {
                 const count = district.getAddressCount();
                 return `District ${district.id}${count > 1 ? ` (${count} addresses)` : ''}`;
             }).join('<br />');
 
-            /*
-            // Fit map to show all results
-            const bounds = new google.maps.LatLngBounds();
-            districtsWithAddresses.forEach(district => {
-                district.addresses.forEach(addr => bounds.extend(addr.location));
-            });
-            map.fitBounds(bounds);*/
         } else {
             resultDiv.textContent = "Not found";
         }
-    });
-});
+}
 
 // Usage example
 // isAddressInKMLPolygon("1600 Amphitheatre Parkway, Mountain View, CA");

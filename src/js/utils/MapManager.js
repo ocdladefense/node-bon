@@ -1,7 +1,7 @@
 class MapManager {
     static instance = null; // Singleton instance
     map = null; // Google Map instance
-    currentPolygons = []; // Track current district polygons on the map for cleanup
+    currentPolygons = new Map(); // Track current district polygons on the map for cleanup
     currentMarkers = []; // Track current address markers on the map for cleanup
 
     constructor() {
@@ -28,7 +28,6 @@ class MapManager {
     clearPolygons() {
         // Remove all polygons from the map and clear the tracking array
         this.currentPolygons.forEach(polygon => polygon.setMap(null));
-        this.currentPolygons = [];
     }
 
     clearMarkers() {
@@ -38,8 +37,8 @@ class MapManager {
     }
 
     // Add a polygon to the map and track it for cleanup
-    addPolygon(polygon) {
-        this.currentPolygons.push(polygon);
+    addPolygon(polygon, id) {
+        this.currentPolygons.set(id, polygon);
     }
 
     // Add a marker to the map and track it for cleanup
@@ -48,7 +47,7 @@ class MapManager {
     }
 
     // Draw a polygon on the map
-    draw(paths, shaded = false, content = null) {
+    draw(paths, id, shaded = false, content = null) {
         const polygon = new google.maps.Polygon({
             paths: paths,
             fillColor: '#2b6cb0',
@@ -59,7 +58,7 @@ class MapManager {
             clickable: !!content
         });
         polygon.setMap(this.map);
-        this.addPolygon(polygon);
+        this.addPolygon(polygon, id);
         // If a content function is provided, add a click listener to the polygon
         if (content) {
             polygon.addListener('click', async (event) => {
@@ -77,26 +76,53 @@ class MapManager {
         districts.forEach(district => {
             this.draw(
                 district.getCoordsAsObjects(), 
+                district.id,
                 true, 
                 (event) => district.getInfo(event.latLng, districtManager)
             );
         });
     }  
 
-    // Draw markers for all addresses within the given districts
-    drawMarkers(districts) {
-        // Loop through each district and its addresses to create markers
-        districts.forEach(district => {
-            // For each address in the district, create a marker
-            district.addresses.forEach(async address => {
-                const marker = new google.maps.Marker({
-                    position: address.location,
-                    map: this.map,
-                    title: await address.getFormattedAddress()
-                });
-                this.addMarker(marker); // Track marker for cleanup
-            });
+    // Get a polygon by its ID
+    getPolygonById(id) {
+        return this.currentPolygons.get(id);
+    }
+
+    // Shade a polygon by ID
+    shadePolygon(id) {
+        const polygon = this.getPolygonById(id);
+        if (polygon) {
+            polygon.setOptions({ fillOpacity: 0.35 });
+            polygon.setMap(this.map);
+        }
+    }
+
+    // Reset polygon to unshaded state
+    resetPolygon(id) {
+        const polygon = this.getPolygonById(id);
+        if (polygon) {
+            polygon.setOptions({ fillOpacity: 0.0 });
+            polygon.setMap(this.map);
+        }
+    }
+
+    // Reset all polygons to unshaded state
+    resetPolygons() {
+        this.currentPolygons.forEach(polygon => {
+            polygon.setOptions({ fillOpacity: 0.0 });
+            polygon.setMap(this.map);
         });
+    }
+
+    // Draw markers for all addresses within the given districts
+    drawMarker(address) {
+        // For each address in the district, create a marker
+        const marker = new google.maps.Marker({
+            position: address.location,
+            map: this.map,
+            title: address.address
+        });
+        this.addMarker(marker); // Track marker for cleanup
     }
 
     // Clear all polygons and markers from the map
