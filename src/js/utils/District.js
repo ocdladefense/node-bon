@@ -80,15 +80,24 @@ export default class District {
     }
     
     // Build info window content for this district
-    async getInfo() {
+    async getHouseDistrictInfo() {
         const addressList = this.addresses.map(addr => `&bull; ${addr.address}`);
         
         return `
             <div><strong>House District ${this.id}</strong><br>
-            <strong>Senate District ${this.type.id}</strong><br>
             <b>Address(es):</b><br>${addressList.join('<br>')}<br><br>
             ${this.representative ? `<b>Representative: </b>${this.representative.FirstName} ${this.representative.LastName}<br>${this.representative.Party}<br>${this.representative.EmailAddress}<br><br>` : ''}
-            ${this.senator ? `<b>Senator: </b>${this.senator.FirstName} ${this.senator.LastName}<br>${this.senator.Party}<br>${this.senator.EmailAddress}<br>` : ''}
+            </div>
+        `;
+    }
+
+    async getSenateDistrictInfo() {
+        const addressList = this.addresses.map(addr => `&bull; ${addr.address}`);
+
+        return `
+            <div><strong>Senate District ${this.id}</strong><br>
+            <b>Address(es):</b><br>${addressList.join('<br>')}<br><br>
+            ${this.senator ? `<b>Senator: </b>${this.senator.FirstName} ${this.senator.LastName}<br>${this.senator.Party}<br>${this.senator.EmailAddress}<br><br>` : ''}
             </div>
         `;
     }

@@ -104,6 +104,7 @@ domReady(async function() {
 function displayTextResults(houseDistrictsWithAddresses, senateDistrictsWithAddresses) {
     const resultDiv = document.getElementById('result');
     const mapManager = MapManager.getInstance();
+    const districtManager = new DistrictManager();
     
     // Build table HTML for house districts
     function buildHouseTable() {
@@ -192,15 +193,59 @@ function displayTextResults(houseDistrictsWithAddresses, senateDistrictsWithAddr
         if (selectedValue === 'house') {
             // Display house district info and shade those house districts on the map
             infoDiv.innerHTML = buildHouseTable();
-            houseDistrictsWithAddresses.forEach(district =>
-                mapManager.shadePolygon(mapManager.getPolygonType('house', district.id))
-            );
+            houseDistrictsWithAddresses.forEach(district => {
+                // Shade the polygon
+                mapManager.shadePolygon(mapManager.getPolygonType('house', district.id));
+                // Make it clickable
+                mapManager.makePolygonClickable(
+                    mapManager.getPolygonType('house', district.id),
+                    true,
+                    (event) => district.getHouseDistrictInfo(event.latLng, districtManager)
+                );
+            });
+            
+            // Add click listeners to table rows
+            document.querySelectorAll('#district-info table tbody tr').forEach((row, index) => {
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', async () => {
+                    const district = houseDistrictsWithAddresses[index];
+                    const infoContent = await district.getHouseDistrictInfo();
+                    const infoWindow = new google.maps.InfoWindow({ content: infoContent });
+                    // Center on the district
+                    const bounds = new google.maps.LatLngBounds();
+                    district.getCoordsAsObjects().forEach(coord => bounds.extend(coord));
+                    infoWindow.setPosition(bounds.getCenter());
+                    infoWindow.open(mapManager.getMap());
+                });
+            });
         } else if (selectedValue === 'senate') {
             // Display senate district info and shade those senate districts on the map
             infoDiv.innerHTML = buildSenateTable();
-            senateDistrictsWithAddresses.forEach(district =>
-                mapManager.shadePolygon(mapManager.getPolygonType('senate', district.id))
-            );
+            senateDistrictsWithAddresses.forEach(district => {
+                // Shade the polygon
+                mapManager.shadePolygon(mapManager.getPolygonType('senate', district.id));
+                // Make it clickable
+                mapManager.makePolygonClickable(
+                    mapManager.getPolygonType('senate', district.id),
+                    true,
+                    (event) => district.getSenateDistrictInfo(event.latLng, districtManager)
+                );
+            });
+            
+            // Add click listeners to table rows
+            document.querySelectorAll('#district-info table tbody tr').forEach((row, index) => {
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', async () => {
+                    const district = senateDistrictsWithAddresses[index];
+                    const infoContent = await district.getSenateDistrictInfo();
+                    const infoWindow = new google.maps.InfoWindow({ content: infoContent });
+                    // Center on the district
+                    const bounds = new google.maps.LatLngBounds();
+                    district.getCoordsAsObjects().forEach(coord => bounds.extend(coord));
+                    infoWindow.setPosition(bounds.getCenter());
+                    infoWindow.open(mapManager.getMap());
+                });
+            });
         }
     });
 }

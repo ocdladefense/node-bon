@@ -76,17 +76,26 @@ class MapManager {
     }
 
     // Shade districts and make them clickable with info windows
-    makePolygonClickable(districts, districtManager) {
-        // Loop through each district and draw it shaded with a click listener
-        districts.forEach(district => {
-            this.draw(
-                district.getCoordsAsObjects(),
-                this.getPolygonType(district.type, district.id),
-                true,
-                (event) => district.getInfo(event.latLng, districtManager)
-            );
-        });
-    }  
+    makePolygonClickable(id, clickable = true, contentCallback = null) {
+        const polygon = this.getPolygonById(id);
+        if (polygon) {
+            // Clear existing click listeners to prevent duplicates
+            google.maps.event.clearListeners(polygon, 'click');
+            // Set the polygon to be clickable and add a click listener if content is provided
+            polygon.setOptions({ clickable: clickable });
+            if (clickable && contentCallback) {
+                google.maps.event.clearListeners(polygon, 'click');
+                polygon.addListener('click', async (event) => {
+                    const infoContent = await contentCallback(event);
+                    const infoWindow = new google.maps.InfoWindow({ content: infoContent });
+                    infoWindow.setPosition(event.latLng);
+                    infoWindow.open(this.map);
+                });
+            }
+
+            polygon.setMap(this.map);
+        }
+    }
 
     // Get a polygon by its ID
     getPolygonById(id) {
@@ -114,8 +123,12 @@ class MapManager {
     // Reset all polygons to unshaded state
     resetPolygons() {
         this.currentPolygons.forEach(polygon => {
-            polygon.setOptions({ fillOpacity: 0.0 });
-            polygon.setMap(this.map);
+            polygon.setOptions({ 
+                fillOpacity: 0.0,
+                clickable: false 
+            });
+            // Clear all click listeners
+            google.maps.event.clearListeners(polygon, 'click');
         });
     }
 
