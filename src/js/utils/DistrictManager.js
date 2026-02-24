@@ -143,10 +143,14 @@ class DistrictManager {
     }
 
     // Get districts that have addresses
-    getDistrictsWithAddresses() {
-        return this.houseDistricts.filter(d => d.hasAddresses()).concat(this.senateDistricts.filter(d => d.hasAddresses()));
+    getHouseDistrictsWithAddresses() {
+        return this.houseDistricts.filter(d => d.hasAddresses());
     }
 
+    // Get senate districts that have addresses
+    getSenateDistrictsWithAddresses() {
+        return this.senateDistricts.filter(d => d.hasAddresses());
+    }
 
 }
 

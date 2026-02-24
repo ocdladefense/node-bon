@@ -36,9 +36,14 @@ class MapManager {
         this.currentMarkers = [];
     }
 
+    // Generate a unique key for each polygon based on its type and ID
+    getPolygonType(type, id) {
+        return `${type}-${id}`;// Example: "house-5" or "senate-12"
+    }
+
     // Add a polygon to the map and track it for cleanup
-    addPolygon(polygon, id) {
-        this.currentPolygons.set(id, polygon);
+    addPolygon(polygon, key) {
+        this.currentPolygons.set(key, polygon);
     }
 
     // Add a marker to the map and track it for cleanup
@@ -47,7 +52,7 @@ class MapManager {
     }
 
     // Draw a polygon on the map
-    draw(paths, id, shaded = false, content = null) {
+    draw(paths, key, shaded = false, content = null) {
         const polygon = new google.maps.Polygon({
             paths: paths,
             fillColor: '#2b6cb0',
@@ -58,7 +63,7 @@ class MapManager {
             clickable: !!content
         });
         polygon.setMap(this.map);
-        this.addPolygon(polygon, id);
+        this.addPolygon(polygon, key);
         // If a content function is provided, add a click listener to the polygon
         if (content) {
             polygon.addListener('click', async (event) => {
@@ -75,9 +80,9 @@ class MapManager {
         // Loop through each district and draw it shaded with a click listener
         districts.forEach(district => {
             this.draw(
-                district.getCoordsAsObjects(), 
-                district.id,
-                true, 
+                district.getCoordsAsObjects(),
+                this.getPolygonType(district.type, district.id),
+                true,
                 (event) => district.getInfo(event.latLng, districtManager)
             );
         });

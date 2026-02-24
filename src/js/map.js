@@ -21,7 +21,12 @@ domReady(async function() {
     await mapManager.load();
 
     // Outline all districts on the map
-    districtManager.houseDistricts.forEach(district => mapManager.draw(district.getCoordsAsObjects(), district.id, false));
+    districtManager.houseDistricts.forEach(district =>
+        mapManager.draw(district.getCoordsAsObjects(), mapManager.getPolygonType('house', district.id), false)
+    );
+    districtManager.senateDistricts.forEach(district =>
+        mapManager.draw(district.getCoordsAsObjects(), mapManager.getPolygonType('senate', district.id), false)
+    );
 /*
     // Draw all districts on the map
     mapManager.draw(districtManager.houseDistricts);
@@ -41,6 +46,7 @@ domReady(async function() {
 
         // Clear previous results (highlights and markers only, keep outlines)
         mapManager.resetPolygons();
+        mapManager.clearMarkers();
         districtManager.clearAllAddresses();
 
         
@@ -68,43 +74,135 @@ domReady(async function() {
         }); // Associate addresses with senate districts for senator info
 
 
-        addresses.forEach(addr => addr.house.addAddress(addr)); // Add addresses to their respective districts for info windows and counting
-        addresses.forEach(addr => addr.senate.addAddress(addr)); // Add addresses to their respective senate districts for info windows and counting
+        addresses.forEach(addr => { 
+            if (addr.house) // Only add to district if we found a valid one
+                 addr.house.addAddress(addr); }); // Add addresses to their respective districts for info windows and counting
+        addresses.forEach(addr => { 
+            if (addr.senate) // Only add to district if we found a valid one
+                 addr.senate.addAddress(addr); }); // Add addresses to their respective senate districts for info windows and counting
 
         addresses.forEach(addr => {
-            mapManager.shadePolygon(addr.house.id);
+            if (addr.house) {
+                mapManager.shadePolygon(mapManager.getPolygonType('house', addr.house.id));
+            }
         });
-
-
-
-
-
-
-        // Display results
-        //const districtsWithAddresses = districtManager.getDistrictsWithAddresses();
         
 
 
         
 
-
-
-
+        // Display text results
+        const houseDistrictsWithAddresses = districtManager.getHouseDistrictsWithAddresses();
+        const senateDistrictsWithAddresses = districtManager.getSenateDistrictsWithAddresses();
+        
+        displayTextResults(houseDistrictsWithAddresses, senateDistrictsWithAddresses);
 
     });
 });
 
-function displayTextResults() {
-            // Display text results
-        if (districtsWithAddresses.length > 0) {
-            resultDiv.innerHTML = districtsWithAddresses.map(district => {
-                const count = district.getAddressCount();
-                return `District ${district.id}${count > 1 ? ` (${count} addresses)` : ''}`;
-            }).join('<br />');
-
-        } else {
-            resultDiv.textContent = "Not found";
+// Display text results for both house and senate districts 
+function displayTextResults(houseDistrictsWithAddresses, senateDistrictsWithAddresses) {
+    const resultDiv = document.getElementById('result');
+    const mapManager = MapManager.getInstance();
+    
+    // Build table HTML for house districts
+    function buildHouseTable() {
+        const rows = houseDistrictsWithAddresses.map(district => {
+            const addressesHTML = district.addresses.map(addr => `<li>${addr.address}</li>`).join('');
+            // Each row will show the district and its associated addresses
+            return `
+                <tr style="border: 1px solid #ccc;">
+                    <td style="border: 1px solid #ccc; padding: 8px;">
+                        <strong>House District ${district.id}</strong>
+                    </td>
+                    <td style="border: 1px solid #ccc; padding: 8px;">
+                        <ul>${addressesHTML}</ul>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        // Wrap rows in a table structure
+        return `
+            <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f0f0f0;">
+                <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">District</th>
+                <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Addresses</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows}
+            </tbody>
+            </table>
+        `;
+    }
+    
+    // Build table HTML for senate districts
+    function buildSenateTable() {
+        const rows = senateDistrictsWithAddresses.map(district => {
+            const addressesHTML = district.addresses.map(addr => `<li>${addr.address}</li>`).join('');
+            // Each row will show the district and its associated addresses
+            return `
+                <tr style="border: 1px solid #ccc;">
+                    <td style="border: 1px solid #ccc; padding: 8px;">
+                        <strong>Senate District ${district.id}</strong>
+                    </td>
+                    <td style="border: 1px solid #ccc; padding: 8px;">
+                        <ul>${addressesHTML}</ul>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        // Wrap rows in a table structure
+        return `
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">District</th>
+                        <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Addresses</th>
+                    </tr>
+                </thead>
+                <tbody style="border: 1px solid #ccc; padding: 8px;">
+                    ${rows}
+                </tbody>
+            </table>
+        `;
+    }
+    
+    // Display results via dropdown list
+    resultDiv.innerHTML = `
+        <label for="district-select">Show info for:</label>
+        <select id="district-select">
+            <option value="">--Select a district--</option>
+            <option value="house">House Districts</option>
+            <option value="senate">Senate Districts</option>
+        </select>
+        <div id="district-info" style="margin-top: 10px;"></div>
+    `;
+    const select = document.getElementById('district-select');
+    const infoDiv = document.getElementById('district-info');
+    
+    select.addEventListener('change', function() {
+        const selectedValue = this.value;
+        
+        // Reset all polygons to unshaded state
+        mapManager.resetPolygons();
+        infoDiv.innerHTML = '';
+        
+        if (selectedValue === 'house') {
+            // Display house district info and shade those house districts on the map
+            infoDiv.innerHTML = buildHouseTable();
+            houseDistrictsWithAddresses.forEach(district =>
+                mapManager.shadePolygon(mapManager.getPolygonType('house', district.id))
+            );
+        } else if (selectedValue === 'senate') {
+            // Display senate district info and shade those senate districts on the map
+            infoDiv.innerHTML = buildSenateTable();
+            senateDistrictsWithAddresses.forEach(district =>
+                mapManager.shadePolygon(mapManager.getPolygonType('senate', district.id))
+            );
         }
+    });
 }
 
 // Usage example

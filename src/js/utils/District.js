@@ -13,8 +13,8 @@ export let districts = [];
 export default class District {
 
     // District number (1-60)
-    id; // h16 = house district 16
-    senateId; // 
+    id; // h16 = house district 16. Keep track of district based on id for shading and info windows
+    type; // "house" or "senate"
     westPoint;
     eastPoint;
     southPoint;
@@ -23,9 +23,8 @@ export default class District {
     representative = null;
     senator = null;
 
-    constructor(coords, id, senateId) {
+    constructor(coords, id) {
         this.id = id;
-        this.senateId = senateId;
         this.coords = coords[0]; // In Oregon district boundaries are contiguous, so we can use the first set of coordinates for the main polygon. If there were multiple polygons (e.g., islands), we would need to check all of them. 
         // Precalculate bounding box points for performance
         this.westPoint = District.getWesternMostPoint(this.coords);
@@ -86,7 +85,7 @@ export default class District {
         
         return `
             <div><strong>House District ${this.id}</strong><br>
-            <strong>Senate District ${this.senateId}</strong><br>
+            <strong>Senate District ${this.type.id}</strong><br>
             <b>Address(es):</b><br>${addressList.join('<br>')}<br><br>
             ${this.representative ? `<b>Representative: </b>${this.representative.FirstName} ${this.representative.LastName}<br>${this.representative.Party}<br>${this.representative.EmailAddress}<br><br>` : ''}
             ${this.senator ? `<b>Senator: </b>${this.senator.FirstName} ${this.senator.LastName}<br>${this.senator.Party}<br>${this.senator.EmailAddress}<br>` : ''}
