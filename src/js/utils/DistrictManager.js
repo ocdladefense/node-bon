@@ -80,9 +80,14 @@ class DistrictManager {
         return this.houseDistricts.concat(this.senateDistricts);
     }
 
-    // Get a specific district by ID
-    getDistrict(id) {
-        return this.houseDistricts.concat(this.senateDistricts)[id - 1];
+    // Get a house district by ID and type
+    getHouseDistrict(id) {
+        return this.houseDistricts[id - 1];
+    }
+
+    // Get a senate district by ID and type
+    getSenateDistrict(id) {
+        return this.senateDistricts[id - 1];
     }
 
     // Find the district for a given location

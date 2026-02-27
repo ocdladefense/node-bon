@@ -5,6 +5,7 @@ export default class Address {
     location; // { lat: number, lng: number } - LatLng object
     district; // District object this address belongs to
     formattedAddress = null; // Cached formatted address from reverse geocoding
+    zip; // ZIP code extracted from formatted address (optional)
     static geocoder; 
     house;
     senate;
@@ -13,6 +14,7 @@ export default class Address {
         this.address = address; // Store original address string
         this.location = location; // Store LatLng object
         this.district = district; // Store reference to the district this address belongs to
+        this.zip = this.extractZip(address);
     }
 
     // Getters for convenience
@@ -29,7 +31,11 @@ export default class Address {
     }
 
 
-    
+    // Extract ZIP code from address string    
+    extractZip(address) {
+        const zipMatch = address.match(/\b\d{5}\b/);
+        return zipMatch ? zipMatch[0] : null;
+    }
     // Get formatted address (with caching)
     async getFormattedAddress() {
         // Return cached formatted address if available

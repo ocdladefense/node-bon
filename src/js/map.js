@@ -1,6 +1,8 @@
 import MapManager from './utils/MapManager.js';
 import DistrictManager from './utils/DistrictManager.js';
 import Address from './utils/Address.js';
+import Cache from './utils/Cache.js';
+import { displayTextResults } from './utils/DistrictToAddressesTable.js';
 
 function domReady(cb) {
     document.readyState === 'interactive' || document.readyState === 'complete'
@@ -10,6 +12,7 @@ function domReady(cb) {
 
 domReady(async function() {
     const districtManager = new DistrictManager();
+    const cache = new Cache();
 
     // Load all data
     await districtManager.loadDistricts();
@@ -58,20 +61,44 @@ domReady(async function() {
         await Promise.all(addresses.map(addr => 
             addr.geocode().then((addr) => mapManager.drawMarker(addr)))); // Geocode all addresses in parallel
 
-
-
-
-        
+        // Process each address, checking cache first
         addresses.forEach(addr => {
-            addr.house = districtManager.findHouseDistrict(addr.location);
-        }); // Associate addresses with districts
+            
+            // First check the cache for this address by ZIP
+            const cached = cache.lookUp(addr.zip);
+
+            if (cached) {
+                // Exact match found in cache
+                if (cached.houseId) {
+                    // If we have a cached house district ID, retrieve the full district object
+                    addr.house = districtManager.getHouseDistrict(cached.houseId); 
+
+                }
+                if (cached.senateId) {
+                    // If we have a cached senate district ID, retrieve the full district object
+                    addr.senate = districtManager.getSenateDistrict(cached.senateId);
+
+                }
+
+                console.log(`Cache hit for ${addr.address}: House ${addr.house ? addr.house.id : 'N/A'}, Senate ${addr.senate ? addr.senate.id : 'N/A'}`);
+            } else {
+                // Not in cache, find districts first, then store
+                addr.house = districtManager.findHouseDistrict(addr.location);
+                addr.senate = districtManager.findSenateDistrict(addr.location);
+                cache.storeResult(addr);
+                console.log(`Cache miss for ${addr.address}: House ${addr.house ? addr.house.id : 'N/A'}, Senate ${addr.senate ? addr.senate.id : 'N/A'}`);
+            }
+        });
 
 
 
-
-        addresses.forEach(addr => { 
-            addr.senate = districtManager.findSenateDistrict(addr.location);
-        }); // Associate addresses with senate districts for senator info
+        // Save result in the cache
+        // Result has house, senate, and zipcode
+        
+        //let results = cache.getResults();
+        // Everytime lookup finds something in the cache, increment hit counter
+        console.log("Hits: " + cache.getHits());
+        console.log("Misses: " + cache.getMisses());
 
 
         addresses.forEach(addr => { 
@@ -100,155 +127,7 @@ domReady(async function() {
     });
 });
 
-// Display text results for both house and senate districts 
-function displayTextResults(houseDistrictsWithAddresses, senateDistrictsWithAddresses) {
-    const resultDiv = document.getElementById('result');
-    const mapManager = MapManager.getInstance();
-    const districtManager = new DistrictManager();
-    
-    // Build table HTML for house districts
-    function buildHouseTable() {
-        const rows = houseDistrictsWithAddresses.map(district => {
-            const addressesHTML = district.addresses.map(addr => `<li>${addr.address}</li>`).join('');
-            // Each row will show the district and its associated addresses
-            return `
-                <tr style="border: 1px solid #ccc;">
-                    <td style="border: 1px solid #ccc; padding: 8px;">
-                        <strong>House District ${district.id}</strong>
-                    </td>
-                    <td style="border: 1px solid #ccc; padding: 8px;">
-                        <ul>${addressesHTML}</ul>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-        // Wrap rows in a table structure
-        return `
-            <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="background-color: #f0f0f0;">
-                <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">District</th>
-                <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Addresses</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${rows}
-            </tbody>
-            </table>
-        `;
-    }
-    
-    // Build table HTML for senate districts
-    function buildSenateTable() {
-        const rows = senateDistrictsWithAddresses.map(district => {
-            const addressesHTML = district.addresses.map(addr => `<li>${addr.address}</li>`).join('');
-            // Each row will show the district and its associated addresses
-            return `
-                <tr style="border: 1px solid #ccc;">
-                    <td style="border: 1px solid #ccc; padding: 8px;">
-                        <strong>Senate District ${district.id}</strong>
-                    </td>
-                    <td style="border: 1px solid #ccc; padding: 8px;">
-                        <ul>${addressesHTML}</ul>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-        // Wrap rows in a table structure
-        return `
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background-color: #f0f0f0;">
-                        <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">District</th>
-                        <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Addresses</th>
-                    </tr>
-                </thead>
-                <tbody style="border: 1px solid #ccc; padding: 8px;">
-                    ${rows}
-                </tbody>
-            </table>
-        `;
-    }
-    
-    // Display results via dropdown list
-    resultDiv.innerHTML = `
-        <label for="district-select">Show info for:</label>
-        <select id="district-select">
-            <option value="">--Select a district--</option>
-            <option value="house">House Districts</option>
-            <option value="senate">Senate Districts</option>
-        </select>
-        <div id="district-info" style="margin-top: 10px;"></div>
-    `;
-    const select = document.getElementById('district-select');
-    const infoDiv = document.getElementById('district-info');
-    
-    select.addEventListener('change', function() {
-        const selectedValue = this.value;
-        
-        // Reset all polygons to unshaded state
-        mapManager.resetPolygons();
-        infoDiv.innerHTML = '';
-        
-        if (selectedValue === 'house') {
-            // Display house district info and shade those house districts on the map
-            infoDiv.innerHTML = buildHouseTable();
-            houseDistrictsWithAddresses.forEach(district => {
-                // Shade the polygon
-                mapManager.shadePolygon(mapManager.getPolygonType('house', district.id));
-                // Make it clickable
-                mapManager.makePolygonClickable(
-                    mapManager.getPolygonType('house', district.id),
-                    true,
-                    (event) => district.getHouseDistrictInfo(event.latLng, districtManager)
-                );
-            });
-            
-            // Add click listeners to table rows
-            document.querySelectorAll('#district-info table tbody tr').forEach((row, index) => {
-                row.style.cursor = 'pointer';
-                row.addEventListener('click', async () => {
-                    const district = houseDistrictsWithAddresses[index];
-                    const infoContent = await district.getHouseDistrictInfo();
-                    const infoWindow = new google.maps.InfoWindow({ content: infoContent });
-                    // Center on the district
-                    const bounds = new google.maps.LatLngBounds();
-                    district.getCoordsAsObjects().forEach(coord => bounds.extend(coord));
-                    infoWindow.setPosition(bounds.getCenter());
-                    infoWindow.open(mapManager.getMap());
-                });
-            });
-        } else if (selectedValue === 'senate') {
-            // Display senate district info and shade those senate districts on the map
-            infoDiv.innerHTML = buildSenateTable();
-            senateDistrictsWithAddresses.forEach(district => {
-                // Shade the polygon
-                mapManager.shadePolygon(mapManager.getPolygonType('senate', district.id));
-                // Make it clickable
-                mapManager.makePolygonClickable(
-                    mapManager.getPolygonType('senate', district.id),
-                    true,
-                    (event) => district.getSenateDistrictInfo(event.latLng, districtManager)
-                );
-            });
-            
-            // Add click listeners to table rows
-            document.querySelectorAll('#district-info table tbody tr').forEach((row, index) => {
-                row.style.cursor = 'pointer';
-                row.addEventListener('click', async () => {
-                    const district = senateDistrictsWithAddresses[index];
-                    const infoContent = await district.getSenateDistrictInfo();
-                    const infoWindow = new google.maps.InfoWindow({ content: infoContent });
-                    // Center on the district
-                    const bounds = new google.maps.LatLngBounds();
-                    district.getCoordsAsObjects().forEach(coord => bounds.extend(coord));
-                    infoWindow.setPosition(bounds.getCenter());
-                    infoWindow.open(mapManager.getMap());
-                });
-            });
-        }
-    });
-}
+
 
 // Usage example
 // isAddressInKMLPolygon("1600 Amphitheatre Parkway, Mountain View, CA");
