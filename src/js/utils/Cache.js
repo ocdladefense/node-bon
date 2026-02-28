@@ -2,9 +2,8 @@ class Cache {
     constructor() {
         this.hits = 0;
         this.misses = 0;
-        this.results = new Map(); // Store results with zipcode as key and address info as value
-        this.STORAGE_KEY = 'district_cache'; // Key for storing cache results in localStorage
-        this.STATS_KEY = 'district_cache_stats'; // Separate key for stats to avoid conflicts with results data
+        this.results = new Map(); // Store results with zipcode as key
+        this.STATS_KEY = 'district_cache_stats'; // Key for storing stats
         
         // Load existing cache from localStorage
         this.loadFromLocalStorage();
@@ -12,20 +11,23 @@ class Cache {
 
     // Load cache results and stats from localStorage
     loadFromLocalStorage() {
-        // Load cached results
         try {
-            // Get stored cache data
-            const stored = localStorage.getItem(this.STORAGE_KEY);
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                // Convert array back to Map
-                this.results = new Map(parsed);
+            // Load all items from localStorage that match cache pattern
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // Skip stats key, load everything else as cache entries
+                if (key && key !== this.STATS_KEY && !key.startsWith('district_cache_stats')) {
+                    const stored = localStorage.getItem(key);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        this.results.set(key, parsed);
+                    }
+                }
             }
             
             // Load stats
             const stats = localStorage.getItem(this.STATS_KEY);
             if (stats) {
-                // Parse stats and set hits/misses
                 const { hits, misses } = JSON.parse(stats);
                 this.hits = hits || 0;
                 this.misses = misses || 0;
@@ -35,12 +37,10 @@ class Cache {
         }
     }
 
-    // Save cache results and stats to localStorage
-    saveToLocalStorage() {
+    // Save a single cache entry to localStorage
+    saveToLocalStorage(zipcode, result) {
         try {
-            // Convert Map to array for JSON serialization
-            const serialized = JSON.stringify(Array.from(this.results.entries()));
-            localStorage.setItem(this.STORAGE_KEY, serialized);
+            localStorage.setItem(zipcode, JSON.stringify(result));
             
             // Save stats
             localStorage.setItem(this.STATS_KEY, JSON.stringify({
@@ -52,7 +52,7 @@ class Cache {
         }
     }
 
-    // Getters for hits and misses
+    // Get number of cache hits
     getHits() {
         return this.hits;
     }
@@ -62,34 +62,22 @@ class Cache {
         return this.misses;
     }
 
-    // Look up a specific address in the cache by zip and address string
-    lookUp(zipcode, addressString = null) {
+    // Look up a result by zipcode
+    lookUp(zipcode) {
         if (!zipcode) return null; // Guard against undefined zip
 
-        // Check if we have a zipcode match in the cache
-        const cachedEntries = this.results.get(zipcode);
+        // Check if we have a cached entry for this ZIP
+        const cached = this.results.get(zipcode);
 
-        // If we have cached entries for this ZIP, it's a hit
-        if (cachedEntries && cachedEntries.length > 0) {
-            // ZIP match counts as a hit
+        if (cached) {
             this.hits++;
-            this.saveToLocalStorage();
-
-            // If we have an address string, try to find an exact match
-            if (addressString) {
-                const exactMatch = cachedEntries.find(entry => entry.address === addressString);
-                if (exactMatch) {
-                    return exactMatch;
-                }
-            }
-
-            // Fallback: return the first cached entry for that ZIP
-            return cachedEntries[0];
+            this.saveToLocalStorage(zipcode, cached);
+            return cached;
         }
 
         // No match found, count as a miss
         this.misses++;
-        this.saveToLocalStorage();
+        this.saveToLocalStorage(zipcode, null);
         return null;
     }
 
@@ -100,31 +88,21 @@ class Cache {
             return;
         }
 
-        // Prepare cache data for storage
+        // Create single cache entry for this zipcode
         const cacheData = {
-            address: addr.address,
-            zip: addr.zip,
-            location: addr.location ? {
-                lat: addr.location.lat(),
-                lng: addr.location.lng()
-            } : null,
-            houseId: addr.house ? addr.house.id : null,
-            senateId: addr.senate ? addr.senate.id : null
+            zipcode: addr.zip,
+            house: addr.house ? addr.house.id : null,
+            senate: addr.senate ? addr.senate.id : null
         };
 
-        // Get existing entries for this ZIP, or initialize an empty array
-        const existing = this.results.get(addr.zip) || [];
-
-        // Avoid storing duplicate entries for the same address
-        const alreadyStored = existing.find(c => c.address === addr.address);
-        if (!alreadyStored) {
-            existing.push(cacheData);
-            this.results.set(addr.zip, existing);
-            this.saveToLocalStorage();
-        }
+        // Store in memory Map
+        this.results.set(addr.zip, cacheData);
+        
+        // Save to localStorage with zipcode as key
+        this.saveToLocalStorage(addr.zip, cacheData);
     }
 
-    // Get all cached results as an array
+    // Get all cached results
     getResults() {
         return Array.from(this.results.values());
     }
@@ -134,7 +112,14 @@ class Cache {
         this.results.clear();
         this.hits = 0;
         this.misses = 0;
-        localStorage.removeItem(this.STORAGE_KEY);
+        
+        // Remove all cache entries from localStorage
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key && key !== this.STATS_KEY) {
+                localStorage.removeItem(key);
+            }
+        }
         localStorage.removeItem(this.STATS_KEY);
     }
 }

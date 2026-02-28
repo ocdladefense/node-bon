@@ -68,25 +68,21 @@ domReady(async function() {
             const cached = cache.lookUp(addr.zip);
 
             if (cached) {
-                // Exact match found in cache
-                if (cached.houseId) {
-                    // If we have a cached house district ID, retrieve the full district object
-                    addr.house = districtManager.getHouseDistrict(cached.houseId); 
-
+                // Cache hit found for this zipcode
+                if (cached.house) {
+                    addr.house = districtManager.getHouseDistrict(cached.house);
                 }
-                if (cached.senateId) {
-                    // If we have a cached senate district ID, retrieve the full district object
-                    addr.senate = districtManager.getSenateDistrict(cached.senateId);
-
+                if (cached.senate) {
+                    addr.senate = districtManager.getSenateDistrict(cached.senate);
                 }
 
-                console.log(`Cache hit for ${addr.address}: House ${addr.house ? addr.house.id : 'N/A'}, Senate ${addr.senate ? addr.senate.id : 'N/A'}`);
+                console.log(`Cache hit for Zipcode ${addr.zip}, House ${addr.house ? addr.house.id : 'N/A'}, Senate ${addr.senate ? addr.senate.id : 'N/A'}`);
             } else {
                 // Not in cache, find districts first, then store
                 addr.house = districtManager.findHouseDistrict(addr.location);
                 addr.senate = districtManager.findSenateDistrict(addr.location);
                 cache.storeResult(addr);
-                console.log(`Cache miss for ${addr.address}: House ${addr.house ? addr.house.id : 'N/A'}, Senate ${addr.senate ? addr.senate.id : 'N/A'}`);
+                console.log(`Cache miss for Zipcode ${addr.zip}, House ${addr.house ? addr.house.id : 'N/A'}, Senate ${addr.senate ? addr.senate.id : 'N/A'}`);
             }
         });
 
