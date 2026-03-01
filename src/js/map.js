@@ -2,7 +2,7 @@ import MapManager from './utils/MapManager.js';
 import DistrictManager from './utils/DistrictManager.js';
 import Address from './utils/Address.js';
 import Cache from './utils/Cache.js';
-import { displayTextResults } from './utils/DistrictToAddressesTable.js';
+import { displayTextResults } from './components/DistrictToAddressesTable.js';
 
 function domReady(cb) {
     document.readyState === 'interactive' || document.readyState === 'complete'
