@@ -6,7 +6,8 @@ class MapManager {
 
     constructor() {
         // Enforce singleton pattern
-        if (MapManager.instance) {
+        if (MapManager.instance)
+        {
             return MapManager.instance;
         }
         MapManager.instance = this;
@@ -14,7 +15,8 @@ class MapManager {
 
     // Static method to get singleton instance
     static getInstance() {
-        if (!MapManager.instance) {
+        if (!MapManager.instance)
+        {
             MapManager.instance = new MapManager();
         }
         return MapManager.instance;
@@ -36,10 +38,7 @@ class MapManager {
         this.currentMarkers = [];
     }
 
-    // Generate a unique key for each polygon based on its type and ID
-    getPolygonType(type, id) {
-        return `${type}-${id}`;// Example: "house-5" or "senate-12"
-    }
+
 
     // Add a polygon to the map and track it for cleanup
     addPolygon(polygon, key) {
@@ -65,7 +64,8 @@ class MapManager {
         polygon.setMap(this.map);
         this.addPolygon(polygon, key);
         // If a content function is provided, add a click listener to the polygon
-        if (content) {
+        if (content)
+        {
             polygon.addListener('click', async (event) => {
                 const infoContent = await content(event);
                 const infoWindow = new google.maps.InfoWindow({ content: infoContent });
@@ -78,12 +78,14 @@ class MapManager {
     // Shade districts and make them clickable with info windows
     makePolygonClickable(id, clickable = true, contentCallback = null) {
         const polygon = this.getPolygonById(id);
-        if (polygon) {
+        if (polygon)
+        {
             // Clear existing click listeners to prevent duplicates
             google.maps.event.clearListeners(polygon, 'click');
             // Set the polygon to be clickable and add a click listener if content is provided
             polygon.setOptions({ clickable: clickable });
-            if (clickable && contentCallback) {
+            if (clickable && contentCallback)
+            {
                 google.maps.event.clearListeners(polygon, 'click');
                 polygon.addListener('click', async (event) => {
                     const infoContent = await contentCallback(event);
@@ -105,7 +107,8 @@ class MapManager {
     // Shade a polygon by ID
     shadePolygon(id) {
         const polygon = this.getPolygonById(id);
-        if (polygon) {
+        if (polygon)
+        {
             polygon.setOptions({ fillOpacity: 0.35 });
             polygon.setMap(this.map);
         }
@@ -114,7 +117,8 @@ class MapManager {
     // Reset polygon to unshaded state
     resetPolygon(id) {
         const polygon = this.getPolygonById(id);
-        if (polygon) {
+        if (polygon)
+        {
             polygon.setOptions({ fillOpacity: 0.0 });
             polygon.setMap(this.map);
         }
@@ -123,9 +127,9 @@ class MapManager {
     // Reset all polygons to unshaded state
     resetPolygons() {
         this.currentPolygons.forEach(polygon => {
-            polygon.setOptions({ 
+            polygon.setOptions({
                 fillOpacity: 0.0,
-                clickable: false 
+                clickable: false
             });
             // Clear all click listeners
             google.maps.event.clearListeners(polygon, 'click');
@@ -147,7 +151,7 @@ class MapManager {
     clearAll() {
         this.clearPolygons();
         this.clearMarkers();
-    } 
+    }
 
     async load() {
         this.map = await load().then(requestLibraries).then(initMap).catch(error => {
@@ -159,14 +163,14 @@ class MapManager {
 
 
 
-async function initMap()
-{
+async function initMap() {
     // Get the map element
     const mapEl = document.getElementById('map');
-    if (!mapEl) {
+    if (!mapEl)
+    {
         throw new Error('Map element not found');
     }
-   
+
 
 
     // Initialize the map
@@ -176,7 +180,7 @@ async function initMap()
         mapTypeId: 'roadmap'
     });
 
-    
+
     return map;
 }
 
@@ -187,11 +191,11 @@ async function requestLibraries() {
     await google.maps.importLibrary("geometry");
     await google.maps.importLibrary("geocoding");
 }
-    
-function load(){
+
+function load() {
     let foobar = new Promise((resolve, reject) => {
         let script = createScriptElement("https://maps.googleapis.com/maps/api/js?key=AIzaSyCfWNi-jamfXgtp5iPBLn63XV_3u5RJK0c&");
-        script.addEventListener('load', () => { 
+        script.addEventListener('load', () => {
             resolve();
         });
         injectScriptElement(script);
@@ -209,10 +213,12 @@ function load(){
 function injectScriptElement(tag) {
 
     let firstScriptTag = document.getElementsByTagName('script')[0];
-    if (firstScriptTag == null) {
+    if (firstScriptTag == null)
+    {
         (document.body || document.head).appendChild(tag);
     }
-    else {
+    else
+    {
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     }
 

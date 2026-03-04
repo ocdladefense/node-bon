@@ -1,55 +1,94 @@
-class Cache {
+
+
+
+
+export default class Cache {
+
+    hits;
+
+    misses;
+
+    results;
+
+    variants;
+
+    static META_KEY = 'district_cache_stats';
+
+    // A cache key that corresponds to multiple values.
+    // Expectation is that a single cache key correspond to a single value.
+    variants;
+
+
+
     constructor() {
         this.hits = 0;
         this.misses = 0;
         this.results = new Map(); // Store results with zipcode as key
-        this.STATS_KEY = 'district_cache_stats'; // Key for storing stats
-        
-        // Load existing cache from localStorage
-        this.loadFromLocalStorage();
+        this.variants = {}; // Store variant data keyed by zipcode
+        this.STATS_KEY = Cache.META_KEY; // Key for storing stats
     }
 
     // Load cache results and stats from localStorage
-    loadFromLocalStorage() {
-        try {
+    static loadFromLocalStorage() {
+
+        let cache = new Cache();
+
+
+        try
+        {
             // Load all items from localStorage that match cache pattern
-            for (let i = 0; i < localStorage.length; i++) {
+            for (let i = 0; i < localStorage.length; i++)
+            {
                 const key = localStorage.key(i);
                 // Skip stats key, load everything else as cache entries
-                if (key && key !== this.STATS_KEY && !key.startsWith('district_cache_stats')) {
+                if (key && key !== this.STATS_KEY && !key.startsWith('district_cache_stats'))
+                {
                     const stored = localStorage.getItem(key);
-                    if (stored) {
+                    if (stored)
+                    {
                         const parsed = JSON.parse(stored);
-                        this.results.set(key, parsed);
+                        cache.results.set(key, parsed);
                     }
                 }
             }
-            
-            // Load stats
+
+            // Load previous stats, if any.
             const stats = localStorage.getItem(this.STATS_KEY);
-            if (stats) {
+            if (stats)
+            {
                 const { hits, misses } = JSON.parse(stats);
-                this.hits = hits || 0;
-                this.misses = misses || 0;
+                cache.hits = hits || 0;
+                cache.misses = misses || 0;
             }
-        } catch (e) {
+        } catch (e)
+        {
             console.error('Error loading cache from localStorage:', e);
         }
+        return cache;
+    }
+
+
+    // This loader will work in the context of Node and Express server.
+    static loadFromDisk() {
+
+
     }
 
     // Save a single cache entry to localStorage
-    saveToLocalStorage(zipcode, result) {
-        try {
-            localStorage.setItem(zipcode, JSON.stringify(result));
-            
-            // Save stats
-            localStorage.setItem(this.STATS_KEY, JSON.stringify({
-                hits: this.hits,
-                misses: this.misses
-            }));
-        } catch (e) {
-            console.error('Error saving cache to localStorage:', e);
-        }
+    saveToLocalStorage() {
+        // Save all cache entries to localStorage
+        this.results.forEach((result, zipcode) => {
+            if (zipcode && result)
+            {
+                localStorage.setItem(zipcode, JSON.stringify(result));
+            }
+        });
+
+        // Save stats
+        localStorage.setItem(this.STATS_KEY, JSON.stringify({
+            hits: this.hits,
+            misses: this.misses
+        }));
     }
 
     // Get number of cache hits
@@ -63,43 +102,66 @@ class Cache {
     }
 
     // Look up a result by zipcode
-    lookUp(zipcode) {
+    lookup(zipcode) {
         if (!zipcode) return null; // Guard against undefined zip
 
         // Check if we have a cached entry for this ZIP
         const cached = this.results.get(zipcode);
 
-        if (cached) {
+        if (cached)
+        {
             this.hits++;
-            this.saveToLocalStorage(zipcode, cached);
+            // this.saveToLocalStorage(zipcode, cached);
             return cached;
         }
 
         // No match found, count as a miss
         this.misses++;
-        this.saveToLocalStorage(zipcode, null);
+        // this.results.set(zipcode, null); // Store null to indicate we looked this up and found nothing
+        // this.saveToLocalStorage(zipcode, null);
         return null;
     }
 
     // Store a result in the cache
-    storeResult(addr) {
-        if (!addr.zip) {
+    put(addr) {
+        if (!addr.zip)
+        {
             console.warn('Address has no ZIP, skipping cache store:', addr.address);
             return;
         }
 
         // Create single cache entry for this zipcode
-        const cacheData = {
+        const store = {
             zipcode: addr.zip,
-            house: addr.house ? addr.house.id : null,
-            senate: addr.senate ? addr.senate.id : null
+            house: addr.house,
+            senate: addr.senate
         };
 
+
+        // Check for variant data.
+        let existing = this.results.get(addr.zip);
+        if (existing)
+        {
+            let sameHouse = existing.house === store.house;
+            let sameSenate = existing.senate === store.senate;
+            // Remove it from the results map;
+            this.results.delete(addr.zip);
+
+            if (!sameHouse || !sameSenate)
+            {
+                // We have a variant! Store it in the variants map.
+                if (!this.variants[addr.zip])
+                {
+                    this.variants[addr.zip] = [];
+                }
+                this.variants[addr.zip].push(store);
+                return;
+            }
+            // Add it to the variants map.
+
+        }
         // Store in memory Map
-        this.results.set(addr.zip, cacheData);
-        
-        // Save to localStorage with zipcode as key
-        this.saveToLocalStorage(addr.zip, cacheData);
+        this.results.set(addr.zip, store);
     }
 
     // Get all cached results
@@ -112,11 +174,13 @@ class Cache {
         this.results.clear();
         this.hits = 0;
         this.misses = 0;
-        
+
         // Remove all cache entries from localStorage
-        for (let i = localStorage.length - 1; i >= 0; i--) {
+        for (let i = localStorage.length - 1; i >= 0; i--)
+        {
             const key = localStorage.key(i);
-            if (key && key !== this.STATS_KEY) {
+            if (key && key !== this.STATS_KEY)
+            {
                 localStorage.removeItem(key);
             }
         }
@@ -124,4 +188,4 @@ class Cache {
     }
 }
 
-export default Cache;
+

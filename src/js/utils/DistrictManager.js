@@ -8,7 +8,7 @@ class DistrictManager {
     senateDistricts = []; // Separate array for senate districts (1-30)
 
     constructor() {
-        
+
     }
 
     // Load district boundaries from GeoJSON and create District objects
@@ -19,25 +19,27 @@ class DistrictManager {
 
         const features = data.features;
         // Create District objects for each feature
-        for (let i = 1; i <= 60; i++) {
-            const districtCoords = features[i - 1].geometry.coordinates; 
+        for (let i = 1; i <= 60; i++)
+        {
+            const districtCoords = features[i - 1].geometry.coordinates;
             const district = new District(districtCoords, i);
             district.type = 'house'; // Label as house district
-            console.log('Loaded house district ' + i);
-            
+            // console.log('Loaded house district ' + i);
+
             this.houseDistricts.push(district);
         }
         // Load senate districts (1-30)
         const senateData = await fetch('/data/geo/Senate_Districts.geojson').then(r => r.json());
-        for (let i = 1; i <= 30; i++) {
+        for (let i = 1; i <= 30; i++)
+        {
             const districtCoords = senateData.features[i - 1].geometry.coordinates;
             const district = new District(districtCoords, i);
             district.type = 'senate'; // Label as senate district
-            console.log('Loaded senate district ' + i);
-            
+            // console.log('Loaded senate district ' + i);
+
             this.senateDistricts.push(district);
         }
-        
+
         console.log('Loaded district boundaries');
         // Mark as loaded to prevent future reloads
         this.loaded = true;
@@ -49,12 +51,12 @@ class DistrictManager {
         data.forEach(rep => {
             const districtNum = rep.DistrictNumber;
             // Associate representative with the correct district (1-60)
-            const district = this.houseDistricts[districtNum - 1]; 
+            const district = this.houseDistricts[districtNum - 1];
 
             district.representative = rep;
             // Check if the representative is in a house or senate district and log it
-            console.log('This representative is in a house district');
-            console.log('Representative ' + district.representative.FirstName + ' ' + district.representative.LastName + ' is in district ' + districtNum);
+            // console.log('This representative is in a house district');
+            // console.log('Representative ' + district.representative.FirstName + ' ' + district.representative.LastName + ' is in district ' + districtNum);
         });
         console.log('Loaded representatives data');
     }
@@ -69,8 +71,8 @@ class DistrictManager {
 
             district.senator = senator;
             // Check if the senator is in a house or senate district and log it
-            console.log('This senator is in a senate district');
-            console.log('Senator ' + district.senator.FirstName + ' ' + district.senator.LastName + ' is in district ' + districtNum);
+            // console.log('This senator is in a senate district');
+            //console.log('Senator ' + district.senator.FirstName + ' ' + district.senator.LastName + ' is in district ' + districtNum);
         });
         console.log('Loaded senators data');
     }
@@ -99,9 +101,11 @@ class DistrictManager {
         const possibles = this.houseDistricts.filter(d => !d.isOutside([lng, lat]));
 
         // Check each possible district
-        for (let district of possibles) {
-            if (this.isLocationInDistrict(location, district)) {
-                return district;
+        for (let district of possibles)
+        {
+            if (this.isLocationInDistrict(location, district))
+            {
+                return district.id;
             }
         }
 
@@ -117,9 +121,11 @@ class DistrictManager {
         const possibles = this.senateDistricts.filter(d => !d.isOutside([lng, lat]));
 
         // Check each possible district
-        for (let district of possibles) {
-            if (this.isLocationInDistrict(location, district)) {
-                return district;
+        for (let district of possibles)
+        {
+            if (this.isLocationInDistrict(location, district))
+            {
+                return district.id;
             }
         }
 
@@ -128,14 +134,16 @@ class DistrictManager {
 
     // Check if a location is inside a district polygon
     isLocationInDistrict(location, district) {
-        try {
+        try
+        {
             // Create a polygon from the district's coordinates and check if the location is inside it
             const polygon = new google.maps.Polygon({
                 paths: district.getCoordsAsObjects()
             });
             // Use the geometry library to check if the location is inside the polygon
             return google.maps.geometry.poly.containsLocation(location, polygon);
-        } catch (error) {
+        } catch (error)
+        {
             console.error('Error checking location:', error);
             return false;
         }

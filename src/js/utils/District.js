@@ -32,7 +32,7 @@ export default class District {
         this.southPoint = District.getSouthernMostPoint(this.coords);
         this.northPoint = District.getNorthernMostPoint(this.coords);
 
-        console.log('District bounding box: W:' + this.westPoint + ' E:' + this.eastPoint + ' S:' + this.southPoint + ' N:' + this.northPoint);
+        // console.log('District bounding box: W:' + this.westPoint + ' E:' + this.eastPoint + ' S:' + this.southPoint + ' N:' + this.northPoint);
     }
 
     // Convert coords to LatLng objects for Google Maps
@@ -78,11 +78,11 @@ export default class District {
         });
         return northernMostPoint;
     }
-    
+
     // Build info window content for this district
     async getHouseDistrictInfo() {
         const addressList = this.addresses.map(addr => `&bull; ${addr.address}`);
-        
+
         return `
             <div><strong>House District ${this.id}</strong><br>
             <b>Address(es):</b><br>${addressList.join('<br>')}<br><br>
@@ -101,7 +101,7 @@ export default class District {
             </div>
         `;
     }
-    
+
     // Check if a given coordinate is outside the bounding box of this district
     isOutside(coords) {
 
@@ -116,6 +116,10 @@ export default class District {
     // Add an address to this district
     addAddress(address) {
         this.addresses.push(address);
+    }
+
+    addAddresses(addresses) {
+        this.addresses.push(...addresses);
     }
 
     // Clear all addresses from this district
@@ -136,7 +140,7 @@ export default class District {
 
 
 
- 
+
 
 function isUrban(point) {
 
