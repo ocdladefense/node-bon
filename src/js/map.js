@@ -3,7 +3,7 @@ import DistrictManager from './utils/DistrictManager.js';
 import Address from './utils/Address.js';
 import Cache from './utils/Cache.js';
 import { displayTextResults } from './components/DistrictToAddressesTable.js';
-// import { cache } from 'react';
+import { domReady } from './utils/html.js';
 
 
 
@@ -13,32 +13,6 @@ let mapManager;
 
 
 
-let counter = 0;
-let funcs = [];
-
-async function domReady(cb) {
-
-
-
-    if (['interactive', 'complete'].includes(document.readyState))
-    {
-        await cb();
-    } else
-    {
-        funcs.push(cb);
-    }
-
-    if (counter === 0)
-    {
-        document.addEventListener('DOMContentLoaded', async () => {
-            await Promise.all(funcs.map(async f => await f()));
-        });
-    }
-
-
-    counter++;
-}
-
 
 
 
@@ -46,7 +20,7 @@ async function domReady(cb) {
 
 
 // Work #1 - Load data and initialize map.
-await domReady(async function() {
+domReady(async function() {
     districtManager = new DistrictManager();
     cache = Cache.loadFromLocalStorage();
     mapManager = MapManager.getInstance();
@@ -63,7 +37,7 @@ await domReady(async function() {
 
 
 // Work #2 - Draw district outlines on the map.
-await domReady(async function() {
+domReady(async function() {
 
     console.log("Drawing districts on the map...");
     // Outline all districts on the map
@@ -80,7 +54,7 @@ await domReady(async function() {
 
 
 // Work #3 - Set up form handler.
-await domReady(async function() {
+domReady(async function() {
     // Set up form handler
     const form = document.getElementById('district-lookup');
     form.addEventListener('submit', onSubmit);

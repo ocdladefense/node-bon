@@ -105,21 +105,21 @@ export default class Cache {
     lookup(zipcode) {
         if (!zipcode) return null; // Guard against undefined zip
 
+
         // Check if we have a cached entry for this ZIP
         const cached = this.results.get(zipcode);
 
-        if (cached)
+        if (this.variants[zipcode] || !cached)
         {
-            this.hits++;
-            // this.saveToLocalStorage(zipcode, cached);
-            return cached;
+            this.misses++;
+            return null;
         }
 
-        // No match found, count as a miss
-        this.misses++;
-        // this.results.set(zipcode, null); // Store null to indicate we looked this up and found nothing
-        // this.saveToLocalStorage(zipcode, null);
-        return null;
+
+        this.hits++;
+        // this.saveToLocalStorage(zipcode, cached);
+        return cached;
+
     }
 
     // Store a result in the cache
@@ -140,22 +140,26 @@ export default class Cache {
 
         // Check for variant data.
         let existing = this.results.get(addr.zip);
-        if (existing)
+
+
+        if (!!existing)
         {
+
             let sameHouse = existing.house === store.house;
             let sameSenate = existing.senate === store.senate;
             // Remove it from the results map;
-            this.results.delete(addr.zip);
 
             if (!sameHouse || !sameSenate)
             {
+
+                // this.results.delete(addr.zip);
                 // We have a variant! Store it in the variants map.
+
                 if (!this.variants[addr.zip])
                 {
                     this.variants[addr.zip] = [];
                 }
                 this.variants[addr.zip].push(store);
-                return;
             }
             // Add it to the variants map.
 
