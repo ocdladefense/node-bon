@@ -47,7 +47,7 @@ class DistrictManager {
 
     // Load representatives data and associate with districts
     async loadRepresentatives() {
-        const data = await fetch('/data/geo/representatives.json').then(r => r.json());
+        const data = await fetch('https://geo.ocdla.org/legislators/representatives').then(r => r.json());
         data.forEach(rep => {
             const districtNum = rep.DistrictNumber;
             // Associate representative with the correct district (1-60)
@@ -63,7 +63,7 @@ class DistrictManager {
 
     // Load senators data and associate with districts
     async loadSenators() {
-        const data = await fetch('/data/geo/senators.json').then(r => r.json());
+        const data = await fetch('https://geo.ocdla.org/legislators/senators').then(r => r.json());
         data.forEach(senator => {
             const districtNum = senator.DistrictNumber;
             // Associate senator with the correct district (1-30)
