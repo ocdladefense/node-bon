@@ -16,6 +16,14 @@ const app = express();
 const fetch = require('node-fetch');
 const port = process.env.PORT || 80;
 
+// In-memory cache storage (shared across requests)
+let serverCache = {
+    hits: 0,
+    misses: 0,
+    results: [],
+    variants: {}
+};
+
 
 
 
@@ -56,7 +64,7 @@ const SF_ACCESS_TOKEN = process.env.SF_OAUTH_SESSION_ACCESS_TOKEN_OVERRIDE;
 // Serve static files from the 'dist' directory
 app.use(express.static('dist'));
 
-
+app.use(express.json()); // Parse JSON request bodies
 app.use(cookieParser());
 
 
@@ -82,6 +90,23 @@ const metaData = {
     "18": "Chapter 18 Appeals",
     "19": "Chapter 19 Habeus Corpus"
 };
+
+// Cache API endpoints
+app.get("/api/cache", (req, res) => {
+    res.json(serverCache);
+});
+
+app.post("/api/cache", (req, res) => {
+    const { hits, misses, results, variants } = req.body;
+    
+    if (hits !== undefined) serverCache.hits = hits;
+    if (misses !== undefined) serverCache.misses = misses;
+    if (results) serverCache.results = results;
+    if (variants) serverCache.variants = variants;
+    
+    console.log(`Cache saved to server. Hits: ${serverCache.hits}, Misses: ${serverCache.misses}, Variants: ${JSON.stringify(serverCache.variants)}`);
+    res.json({ success: true, message: 'Cache saved' });
+});
 
 
 app.get("/toc/tnb", (req, res) => {

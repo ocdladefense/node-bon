@@ -22,7 +22,15 @@ let mapManager;
 // Work #1 - Load data and initialize map.
 domReady(async function() {
     districtManager = new DistrictManager();
-    cache = Cache.loadFromLocalStorage();
+    // Try to load cache from server first, fall back to localStorage
+    cache = await Cache.loadFromServer();
+    // If server cache is empty, try localStorage as fallback
+    if (cache.getResults().length === 0) {
+        const localCache = Cache.loadFromLocalStorage();
+        if (localCache.getResults().length > 0) {
+            cache = localCache;
+        }
+    }
     mapManager = MapManager.getInstance();
 
     // Load all data
@@ -74,9 +82,26 @@ async function doWork(addresses) {
         // First check the cache for this address by ZIP
         const cached = cache.lookup(addr.zip);
 
-        // Not in cache, find districts first, then store
-        addr.house = null == cached ? districtManager.findHouseDistrict(addr.location) : cached.house;
-        addr.senate = null == cached ? districtManager.findSenateDistrict(addr.location) : cached.senate;
+        // Check if cached districts actually match the geocoded location (to avoid false cache hits from ZIPs with multiple districts)
+        let canUseCached = false;
+
+        // If we have cached districts for this ZIP, verify that the geocoded location is actually within those districts before using the cache
+        if (cached)
+        {
+            const cachedHouseDistrict = districtManager.getHouseDistrict(cached.house);
+            const cachedSenateDistrict = districtManager.getSenateDistrict(cached.senate);
+
+            // Verify that the geocoded location is actually within the cached districts
+            canUseCached = !!cachedHouseDistrict
+                && !!cachedSenateDistrict
+                && districtManager.isLocationInDistrict(addr.location, cachedHouseDistrict)
+                && districtManager.isLocationInDistrict(addr.location, cachedSenateDistrict);
+        }
+
+        // Use cache only when the geocoded point actually matches cached districts.
+        // If not, recompute and let cache.put() record a variant for this ZIP.
+        addr.house = canUseCached ? cached.house : districtManager.findHouseDistrict(addr.location);
+        addr.senate = canUseCached ? cached.senate : districtManager.findSenateDistrict(addr.location);
 
 
         // Might not want to do this each time.
@@ -87,6 +112,8 @@ async function doWork(addresses) {
 
 
     cache.saveToLocalStorage();
+    // Also save to server
+    await cache.saveToServer();
     // Save result in the cache
     // Result has house, senate, and zipcode
 
