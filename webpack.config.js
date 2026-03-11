@@ -3,6 +3,7 @@ const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
 const Dotenv = require('dotenv-webpack');
+const InterpolateHtmlPlugin = require("interpolate-html-plugin");
 
 module.exports = env => {
     console.log(env);
@@ -111,6 +112,9 @@ module.exports = env => {
                 chunks: ["app"],
                 inject: "body",
                 filename: "index.html"
+            }),
+            new InterpolateHtmlPlugin({
+                GOOGLE_ANALYTICS_ID: env.GOOGLE_ANALYTICS_ID
             }),
             new CopyPlugin({
                 patterns: [
