@@ -132,7 +132,7 @@ export async function getBookList() {
    */
 export async function getContent(book, unit) {
 
-    if (["tnb", "im", "clfb"].includes(book))
+    if (["dnb", "tnb", "im", "clfb"].includes(book))
     {
         // For The New Bonaventura and The Cloud of Unknowing, load the chapter directly.
         return await fetch(`/data/${book}/${book}-${unit}.html`).then(resp => resp.text());
