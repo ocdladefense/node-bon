@@ -114,7 +114,7 @@ module.exports = env => {
                 filename: "index.html"
             }),
             new InterpolateHtmlPlugin({
-                GOOGLE_ANALYTICS_ID: env.GOOGLE_ANALYTICS_ID
+                GOOGLE_ANALYTICS_ID: env.production ? env.GOOGLE_ANALYTICS_ID : null
             }),
             new CopyPlugin({
                 patterns: [
