@@ -13,3 +13,8 @@
 .modal .toc {
     padding-bottom: 25px;
 }
+
+
+.WordSection1 a {
+    color: revert;   
+}
