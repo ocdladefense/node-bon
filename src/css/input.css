@@ -3,7 +3,7 @@
 @tailwind utilities;
 @tailwind forms;
 @plugin "daisyui";
-
+@import "./headings.css";
 
 .overflow-hidden {
     overflow: hidden;
@@ -13,3 +13,9 @@
 .modal .toc {
     padding-bottom: 25px;
 }
+
+
+.WordSection1 a {
+    color: revert;   
+}
+
