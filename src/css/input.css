@@ -15,7 +15,8 @@
 }
 
 
-.WordSection1 a {
+.WordSection1 a,
+section a {
     color: revert;   
 }
 
