@@ -44,7 +44,7 @@ export default function Layout() {
         openModal(
             <div >
                 <h2 className="text-2xl font-semibold mb-4">{title}</h2>
-                <Toc action={closeModal} />
+                <Toc bookId={bookId} action={closeModal} />
             </div>
         );
     };
