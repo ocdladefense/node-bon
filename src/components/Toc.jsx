@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { getChapterList } from '../js/utils/book';
 
 
 
 
-export default function Toc({ action }) {
+export default function Toc({ bookId, action }) {
 
     let [chapterList, setChapterList] = useState([]);
-    let params = useParams();
-    let bookId = params.bookId;
     let goto = useNavigate();
 
     let navigate = function(path) {
@@ -24,7 +22,7 @@ export default function Toc({ action }) {
             setChapterList(chapterList);
         }
         fn();
-    }, []);
+    }, [bookId]);
 
 
     let theList = [];

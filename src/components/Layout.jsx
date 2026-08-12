@@ -53,12 +53,12 @@ export default function Layout() {
 
     return (
         <>
-            <BookPicker />
+            <BookPicker activeBookId={bookId} />
             <BookHeader title={book.title} edition={book.edition} editor={book.editor} />
             <div className="grid grid-cols-8 gap-4 bg-white">
                 <Modal isOpen={isOpen} content={modalContent} onClose={closeModal} />
                 <div style={{ position: "sticky", top: "75px", height: "100vh", overflowY: "auto" }} className="hidden tablet:block col-span-2 p-4 border-r border-solid border-gray-400">
-                    <Toc />
+                    <Toc bookId={bookId} />
                 </div>
                 <div className="tablet:col-span-6 col-span-8 p-4">
                     <div className="min-h-screen">
