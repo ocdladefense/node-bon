@@ -143,6 +143,8 @@ export async function getContent(book, unit) {
         // import node function
         let selectors = book == "ssm" ? "header, section[class^='level1'], section[class^='level2']" : "header, section[class^='level1']";
         let sections = doc.querySelectorAll(selectors);
+        console.log("hello world");
+        console.log(sections);
         let fragment = document.createDocumentFragment();
         fragment.append(...sections);
         const s = new XMLSerializer();

@@ -20,3 +20,18 @@ section a {
     color: revert;   
 }
 
+
+.WordSection1 a:hover,
+section a:hover {
+    text-decoration: underline;
+}
+
+section.level3 {
+    padding-left: 1.5rem;
+}
+
+section p {
+    font-size: 1.025rem;
+    line-height: 1.45;
+}
+
